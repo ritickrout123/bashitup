@@ -33,16 +33,9 @@ const occasionMultipliers: Record<EventCategory, number> = {
 
 // Location-based surcharge (percentage)
 const locationSurcharges: Record<string, number> = {
-  'Mumbai': 0.15,
-  'Delhi': 0.12,
-  'Bangalore': 0.10,
-  'Chennai': 0.08,
-  'Kolkata': 0.05,
-  'Hyderabad': 0.08,
-  'Pune': 0.10,
-  'Ahmedabad': 0.05,
-  'Jaipur': 0.03,
-  'Surat': 0.02
+  'Chandigarh': 0.0,
+  'Mohali': 0.05,
+  'Panchkula': 0.05
 };
 
 // Guest count multipliers
@@ -96,7 +89,7 @@ export function calculateDetailedPrice(params: PriceCalculationParams): PriceBre
   }
 
   const basePrice = budget.min;
-  
+
   // Calculate multipliers
   const occasionMultiplier = occasionMultipliers[occasion] || 1.0;
   const guestMultiplier = getGuestCountMultiplier(guestCount);
@@ -104,14 +97,14 @@ export function calculateDetailedPrice(params: PriceCalculationParams): PriceBre
 
   // Calculate adjusted base price
   const adjustedBasePrice = basePrice * occasionMultiplier * guestMultiplier;
-  
+
   // Calculate location surcharge amount
   const locationSurchargeAmount = adjustedBasePrice * locationSurchargeRate;
-  
+
   // Calculate addon prices (placeholder - would be fetched from database)
   const addonPrices: { [addonId: string]: number } = {};
   let totalAddonPrice = 0;
-  
+
   addons.forEach(addonId => {
     // Placeholder addon pricing logic
     const addonPrice = 1000; // This would be fetched from database
@@ -121,10 +114,10 @@ export function calculateDetailedPrice(params: PriceCalculationParams): PriceBre
 
   // Calculate subtotal
   const subtotal = adjustedBasePrice + locationSurchargeAmount + totalAddonPrice;
-  
+
   // Calculate taxes (18% GST)
   const taxes = subtotal * 0.18;
-  
+
   // Calculate final amount
   const finalAmount = subtotal + taxes;
 
@@ -149,7 +142,7 @@ export function getBudgetRangeByValue(value: string): BudgetRangeConfig | undefi
 
 export function isLocationServiceable(location: string): boolean {
   const serviceableCities = Object.keys(locationSurcharges);
-  return serviceableCities.some(city => 
+  return serviceableCities.some(city =>
     city.toLowerCase().includes(location.toLowerCase()) ||
     location.toLowerCase().includes(city.toLowerCase())
   );

@@ -43,6 +43,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow guest bookings (POST /api/bookings)
+  if (pathname === '/api/bookings' && request.method === 'POST') {
+    return NextResponse.next();
+  }
+
   // Check if the route requires authentication
   const protectedRoute = Object.keys(protectedRoutes).find(route =>
     pathname.startsWith(route)
