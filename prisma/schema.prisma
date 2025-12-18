@@ -1,6 +1,3 @@
-// BashItNow Database Schema
-// Event decoration booking platform
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,120 +7,102 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User Management
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  phone     String   @unique
-  name      String
-  role      UserRole @default(CUSTOMER)
-  password  String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
+  id           String        @id @default(cuid())
+  email        String        @unique
+  phone        String        @unique
+  name         String
+  role         UserRole      @default(CUSTOMER)
+  password     String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   bookings     Booking[]
+  decorations  Booking[]     @relation("DecoratorBookings")
   testimonials Testimonial[]
-  decorations  Booking[] @relation("DecoratorBookings")
 
   @@map("users")
 }
 
-// Themes and Portfolio
 model Theme {
-  id          String        @id @default(cuid())
-  name        String
-  description String
-  category    EventCategory
-  images      String // JSON array of image URLs
-  videoUrl    String?
-  basePrice   Float
-  setupTime   Int // in minutes
-  isActive    Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  // Relations
-  bookings      Booking[]
+  id             String          @id @default(cuid())
+  name           String
+  description    String
+  category       EventCategory
+  images         String
+  videoUrl       String?
+  basePrice      Float
+  setupTime      Int
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  bookings       Booking[]
   portfolioItems PortfolioItem[]
-  themeAddons   ThemeAddon[]
+  themeAddons    ThemeAddon[]
 
   @@map("themes")
 }
 
 model PortfolioItem {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   themeId     String
   title       String
   description String
   beforeImage String
-  afterImages String // JSON array of image URLs
+  afterImages String
   videoUrl    String?
   eventDate   DateTime
   location    String
-  isPublic    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  theme       Theme         @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  isPublic    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  theme       Theme        @relation(fields: [themeId], references: [id], onDelete: Cascade)
   testimonial Testimonial?
 
   @@map("portfolio_items")
 }
 
-// Booking System
 model Booking {
-  id              String        @id @default(cuid())
-  customerId      String
-  occasionType    String
-  themeId         String
-  date            DateTime
-  startTime       String // HH:MM format
-  endTime         String // HH:MM format
-  guestCount      Int
-  totalAmount     Float
-  status          BookingStatus @default(PENDING)
-  paymentStatus   PaymentStatus @default(PENDING)
-  decoratorId     String?
-  specialRequests String?
-  
-  // Payment fields
-  paymentIntentId    String?
-  paidAmount         Float?
-  callbackRequested  Boolean @default(false)
-  preferredCallTime  DateTime?
-  callbackNotes      String?
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  // Location as JSON
-  location Json // {address, city, pincode, coordinates: {lat, lng}}
-
-  // Relations
-  customer   User            @relation(fields: [customerId], references: [id])
-  theme      Theme           @relation(fields: [themeId], references: [id])
-  decorator  User?           @relation("DecoratorBookings", fields: [decoratorId], references: [id])
-  addons     BookingAddon[]
-  payments   Payment[]
-  testimonial Testimonial?
+  id                String         @id @default(cuid())
+  customerId        String
+  occasionType      String
+  themeId           String
+  date              DateTime
+  startTime         String
+  endTime           String
+  guestCount        Int
+  totalAmount       Float
+  status            BookingStatus  @default(PENDING)
+  paymentStatus     PaymentStatus  @default(PENDING)
+  decoratorId       String?
+  specialRequests   String?
+  paymentIntentId   String?
+  paidAmount        Float?
+  callbackRequested Boolean        @default(false)
+  preferredCallTime DateTime?
+  callbackNotes     String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  location          Json
+  addons            BookingAddon[]
+  customer          User           @relation(fields: [customerId], references: [id])
+  decorator         User?          @relation("DecoratorBookings", fields: [decoratorId], references: [id])
+  theme             Theme          @relation(fields: [themeId], references: [id])
+  payments          Payment[]
+  testimonial       Testimonial?
 
   @@map("bookings")
 }
 
 model Addon {
-  id          String  @id @default(cuid())
-  name        String
-  description String
-  price       Float
-  category    String
-  isActive    Boolean @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
+  id            String         @id @default(cuid())
+  name          String
+  description   String
+  price         Float
+  category      String
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   bookingAddons BookingAddon[]
   themeAddons   ThemeAddon[]
 
@@ -131,15 +110,13 @@ model Addon {
 }
 
 model BookingAddon {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   bookingId String
   addonId   String
-  quantity  Int    @default(1)
+  quantity  Int     @default(1)
   price     Float
-
-  // Relations
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  addon   Addon   @relation(fields: [addonId], references: [id])
+  addon     Addon   @relation(fields: [addonId], references: [id])
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@unique([bookingId, addonId])
   @@map("booking_addons")
@@ -149,68 +126,58 @@ model ThemeAddon {
   id      String @id @default(cuid())
   themeId String
   addonId String
-
-  // Relations
-  theme Theme @relation(fields: [themeId], references: [id], onDelete: Cascade)
-  addon Addon @relation(fields: [addonId], references: [id])
+  addon   Addon  @relation(fields: [addonId], references: [id])
+  theme   Theme  @relation(fields: [themeId], references: [id], onDelete: Cascade)
 
   @@unique([themeId, addonId])
   @@map("theme_addons")
 }
 
-// Payment System
 model Payment {
-  id              String        @id @default(cuid())
-  bookingId       String
-  amount          Float
-  paymentMethod   String
-  paymentGateway  String
+  id               String        @id @default(cuid())
+  bookingId        String
+  amount           Float
+  paymentMethod    String
+  paymentGateway   String
   gatewayPaymentId String?
-  status          PaymentStatus @default(PENDING)
-  paidAt          DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  // Relations
-  booking Booking @relation(fields: [bookingId], references: [id])
+  status           PaymentStatus @default(PENDING)
+  paidAt           DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  booking          Booking       @relation(fields: [bookingId], references: [id])
 
   @@map("payments")
 }
 
-// Reviews and Testimonials
 model Testimonial {
-  id              String   @id @default(cuid())
+  id              String         @id @default(cuid())
   customerId      String
-  bookingId       String   @unique
-  portfolioItemId String?  @unique
+  bookingId       String         @unique
+  portfolioItemId String?        @unique
   rating          Int
   comment         String
-  images          String // JSON array of image URLs
+  images          String
   videoUrl        String?
-  isPublic        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  customer      User           @relation(fields: [customerId], references: [id])
-  booking       Booking        @relation(fields: [bookingId], references: [id])
-  portfolioItem PortfolioItem? @relation(fields: [portfolioItemId], references: [id])
+  isPublic        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  booking         Booking        @relation(fields: [bookingId], references: [id])
+  customer        User           @relation(fields: [customerId], references: [id])
+  portfolioItem   PortfolioItem? @relation(fields: [portfolioItemId], references: [id])
 
   @@map("testimonials")
 }
 
-// System Configuration
 model SystemConfig {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("system_config")
 }
 
-// Enums
 enum UserRole {
   CUSTOMER
   ADMIN
