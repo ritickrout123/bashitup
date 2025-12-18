@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Booking Flow - BashItNow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 100%);
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #7c3aed;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #374151;
+            margin-top: 0;
+        }
+        button {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .links {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .links a {
+            display: inline-block;
+            margin: 10px;
+            padding: 12px 24px;
+            background: #6366f1;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+        .links a:hover {
+            background: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 BashItNow Booking Flow Test</h1>
+        
+        <div class="test-section">
+            <h2>1. Test Themes API</h2>
+            <p>Check if themes are loading correctly from the database.</p>
+            <button onclick="testThemes()">Test Themes API</button>
+            <div id="themes-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Test Availability API</h2>
+            <p>Check if time slots are available for booking.</p>
+            <button onclick="testAvailability()">Test Today's Availability</button>
+            <button onclick="testAvailabilityTomorrow()">Test Tomorrow's Availability</button>
+            <div id="availability-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Test Booking Creation</h2>
+            <p>Create a test booking to verify the complete flow.</p>
+            <button onclick="testBooking()">Create Test Booking</button>
+            <div id="booking-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="links">
+            <a href="http://localhost:3000" target="_blank">🏠 Homepage</a>
+            <a href="http://localhost:3000/booking" target="_blank">📝 Booking Page</a>
+            <a href="http://localhost:3000/admin" target="_blank">⚙️ Admin Dashboard</a>
+            <a href="http://localhost:3000/login" target="_blank">🔐 Login (admin@bashitnow.com / admin123)</a>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:3000';
+
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        async function testThemes() {
+            try {
+                showResult('themes-result', 'Loading themes...', 'info');
+                
+                const response = await fetch(`${baseUrl}/api/themes`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const themes = data.data;
+                    const result = `✅ SUCCESS: Found ${themes.length} themes\n\n` +
+                        themes.map(theme => 
+                            `• ${theme.name} (${theme.category}) - ₹${theme.basePrice}`
+                        ).join('\n');
+                    showResult('themes-result', result, 'success');
+                } else {
+                    showResult('themes-result', `❌ ERROR: ${data.error?.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('themes-result', `❌ NETWORK ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAvailability() {
+            await testAvailabilityForDate(new Date(), 'availability-result');
+        }
+
+        async function testAvailabilityTomorrow() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            await testAvailabilityForDate(tomorrow, 'availability-result');
+        }
+
+        async function testAvailabilityForDate(date, resultId) {
+            try {
+                const dateStr = date.toISOString().split('T')[0];
+                showResult(resultId, `Loading availability for ${dateStr}...`, 'info');
+                
+                const response = await fetch(`${baseUrl}/api/bookings/availability?date=${dateStr}&city=Mumbai`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const slots = data.data.slots;
+                    const availableSlots = slots.filter(slot => slot.isAvailable);
+                    
+                    const result = `✅ SUCCESS: ${availableSlots.length}/${slots.length} slots available for ${dateStr}\n\n` +
+                        'Available Time Slots:\n' +
+                        availableSlots.map(slot => 
+                            `• ${slot.startTime} - ${slot.endTime}`
+                        ).join('\n');
+                    showResult(resultId, result, 'success');
+                } else {
+                    showResult(resultId, `❌ ERROR: ${data.error?.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultId, `❌ NETWORK ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBooking() {
+            try {
+                showResult('booking-result', 'Creating test booking...', 'info');
+                
+                // First get themes
+                const themesResponse = await fetch(`${baseUrl}/api/themes`);
+                const themesData = await themesResponse.json();
+                
+                if (!themesData.success || !themesData.data.length) {
+                    throw new Error('No themes available');
+                }
+                
+                const theme = themesData.data[0];
+                
+                // Get tomorrow's date for booking
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                const bookingData = {
+                    occasionType: 'Birthday Party',
+                    themeId: theme.id,
+                    date: tomorrow,
+                    timeSlot: {
+                        startTime: '14:00',
+                        endTime: '18:00',
+                        isAvailable: true
+                    },
+                    location: {
+                        address: '123 Test Street',
+                        city: 'Mumbai',
+                        pincode: '400001',
+                        coordinates: { lat: 19.0760, lng: 72.8777 }
+                    },
+                    guestCount: 30,
+                    customerInfo: {
+                        name: 'Test Customer',
+                        email: 'test@example.com',
+                        phone: '+919876543210'
+                    },
+                    specialRequests: 'This is a test booking'
+                };
+                
+                const response = await fetch(`${baseUrl}/api/bookings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const booking = data.data;
+                    const result = `✅ SUCCESS: Booking created!\n\n` +
+                        `Booking ID: ${booking.id}\n` +
+                        `Customer: ${booking.customer.name}\n` +
+                        `Theme: ${booking.theme.name}\n` +
+                        `Date: ${new Date(booking.date).toLocaleDateString()}\n` +
+                        `Time: ${booking.startTime} - ${booking.endTime}\n` +
+                        `Amount: ₹${booking.totalAmount}\n` +
+                        `Status: ${booking.status}`;
+                    showResult('booking-result', result, 'success');
+                } else {
+                    showResult('booking-result', `❌ ERROR: ${data.error?.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('booking-result', `❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run theme test on page load
+        window.onload = function() {
+            testThemes();
+        };
+    </script>
+</body>
+</html>
