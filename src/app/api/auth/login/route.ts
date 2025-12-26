@@ -17,9 +17,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Set secure cookies
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.NETLIFY === 'true';
+    
     response.cookies.set('accessToken', authResponse.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
@@ -27,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set('refreshToken', authResponse.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: '/',

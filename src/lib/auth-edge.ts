@@ -8,6 +8,7 @@ import { JWTPayload, UserRole } from '@/types';
 export async function verifyAccessToken(token: string): Promise<JWTPayload> {
   const JWT_SECRET = process.env.JWT_SECRET;
   if (!JWT_SECRET) {
+    console.error('JWT_SECRET not configured in environment');
     throw new Error('JWT_SECRET not configured');
   }
   
@@ -21,7 +22,8 @@ export async function verifyAccessToken(token: string): Promise<JWTPayload> {
       iat: payload.iat,
       exp: payload.exp,
     };
-  } catch {
+  } catch (error) {
+    console.error('JWT verification failed:', error);
     throw new Error('Invalid or expired access token');
   }
 }
