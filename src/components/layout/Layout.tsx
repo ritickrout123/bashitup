@@ -29,7 +29,7 @@ export default function Layout({
         />
       )}
       
-      <main className={`flex-grow ${showHeader ? 'pt-16 md:pt-20' : ''}`}>
+      <main className={`flex-grow ${showHeader && !headerTransparent ? 'pt-16 md:pt-20' : ''}`}>
         {children}
       </main>
       
