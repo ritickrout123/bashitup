@@ -11,18 +11,22 @@ export async function POST() {
     });
 
     // Clear cookies by setting them to expire immediately
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                         process.env.NETLIFY === 'true' || 
+                         process.env.VERCEL === '1';
+    
     response.cookies.set('accessToken', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 0,
       path: '/',
     });
 
     response.cookies.set('refreshToken', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 0,
       path: '/',
     });

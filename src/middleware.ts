@@ -61,7 +61,12 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('accessToken')?.value ||
     request.headers.get('Authorization')?.replace('Bearer ', '');
 
+  console.log('Middleware - Path:', pathname);
+  console.log('Middleware - Token found:', !!token);
+  console.log('Middleware - Cookies:', request.cookies.getAll().map(c => c.name));
+
   if (!token) {
+    console.log('Middleware - No token found, redirecting to login');
     // Redirect to login for browser requests
     if (request.headers.get('accept')?.includes('text/html')) {
       const loginUrl = new URL('/login', request.url);

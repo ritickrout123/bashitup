@@ -17,12 +17,15 @@ export async function POST(request: NextRequest) {
     });
 
     // Set secure cookies
-    const isProduction = process.env.NODE_ENV === 'production' || process.env.NETLIFY === 'true';
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                         process.env.NETLIFY === 'true' || 
+                         process.env.VERCEL === '1' ||
+                         request.url.includes('https://');
     
     response.cookies.set('accessToken', authResponse.accessToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
     });
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set('refreshToken', authResponse.refreshToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: '/',
     });

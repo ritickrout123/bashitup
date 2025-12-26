@@ -31,15 +31,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Check authentication status
   const checkAuthStatus = async () => {
     try {
+      console.log('Checking auth status...');
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
       });
 
+      console.log('Auth check response status:', response.status);
+
       if (response.ok) {
         const data: APIResponse<Omit<User, 'password'>> = await response.json();
+        console.log('Auth check data:', data);
         if (data.success && data.data) {
           setUser(data.data);
         }
+      } else {
+        console.log('Auth check failed:', response.statusText);
       }
     } catch (error) {
       console.error('Auth check error:', error);
@@ -52,6 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (credentials: LoginCredentials) => {
     setIsLoading(true);
     try {
+      console.log('Attempting login...');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -61,7 +68,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         body: JSON.stringify(credentials),
       });
 
+      console.log('Login response status:', response.status);
       const data: APIResponse<AuthResponse> = await response.json();
+      console.log('Login response data:', data);
 
       if (!response.ok || !data.success) {
         throw new Error(data.error?.message || 'Login failed');
@@ -69,6 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (data.data) {
         setUser(data.data.user);
+        console.log('User set successfully:', data.data.user);
       }
     } catch (error) {
       console.error('Login error:', error);
