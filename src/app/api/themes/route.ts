@@ -28,9 +28,21 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Parse images string to array for frontend compatibility
+    const formattedThemes = themes.map(theme => {
+      let images: string[] = [];
+      try {
+        const parsed = JSON.parse(theme.images);
+        images = Array.isArray(parsed) ? parsed : [theme.images];
+      } catch (e) {
+        images = [theme.images];
+      }
+      return { ...theme, images };
+    });
+
     return NextResponse.json({
       success: true,
-      data: themes,
+      data: formattedThemes,
       timestamp: new Date(),
     } as APIResponse<Theme[]>);
   } catch (error) {

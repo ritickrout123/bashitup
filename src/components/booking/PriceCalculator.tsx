@@ -165,7 +165,7 @@ export function PriceCalculator({
       </div>
 
       {/* Add-ons Selection */}
-      <div>
+      {/* <div>
         <h4 className="text-lg font-semibold text-gray-800 mb-4">
           Enhance Your Event (Optional)
         </h4>
@@ -204,7 +204,7 @@ export function PriceCalculator({
             </motion.div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Detailed Price Breakdown */}
       {priceBreakdown && (

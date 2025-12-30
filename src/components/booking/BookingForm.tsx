@@ -117,6 +117,7 @@ export function BookingForm({
     const occasionParam = searchParams.get('occasion');
     const cityParam = searchParams.get('location');
     const budgetParam = searchParams.get('budget');
+    const themeParam = searchParams.get('theme');
 
     if (dateParam && !formData.date) {
       const parsedDate = new Date(dateParam);
@@ -126,7 +127,19 @@ export function BookingForm({
       }
     }
 
-    if (occasionParam && !formData.occasionType) {
+    // Handle Theme Selection (from Theme Details or Catalogue)
+    if (themeParam && !formData.themeId && availableThemes.length > 0) {
+      const selectedTheme = availableThemes.find(t => t.id === themeParam);
+      if (selectedTheme) {
+        updates.themeId = selectedTheme.id;
+        updates.occasionType = selectedTheme.category;
+        hasUpdates = true;
+        // Skip to Step 3 (Location) since Occasion (1) and Theme (2) are known
+        setCurrentStep(3);
+      }
+    }
+
+    if (occasionParam && !formData.occasionType && !updates.occasionType) {
       updates.occasionType = occasionParam;
       hasUpdates = true;
     }

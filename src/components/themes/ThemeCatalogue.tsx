@@ -352,9 +352,12 @@ function ThemeCard({ theme, onSelect, viewMode }: ThemeCardProps) {
 
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
-                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300">
+                <a
+                  href={`/themes/${theme.id}`}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300"
+                >
                   View More
-                </button>
+                </a>
               </div>
               <button
                 onClick={onSelect}
@@ -381,8 +384,7 @@ function ThemeCard({ theme, onSelect, viewMode }: ThemeCardProps) {
         <img
           src={(() => {
             try {
-              const images = JSON.parse(theme.images);
-              return images[0] || '/images/placeholder-theme.jpg';
+              return theme.images[0] || '/images/placeholder-theme.jpg';
             } catch {
               return '/images/placeholder-theme.jpg';
             }
@@ -433,9 +435,12 @@ function ThemeCard({ theme, onSelect, viewMode }: ThemeCardProps) {
         </p>
 
         <div className="flex gap-2">
-          <button className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 text-sm font-medium">
+          <a
+            href={`/themes/${theme.id}`}
+            className="flex-1 flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-300 text-sm font-medium"
+          >
             View More
-          </button>
+          </a>
           <button
             onClick={onSelect}
             className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-sm"
