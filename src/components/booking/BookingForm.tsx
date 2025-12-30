@@ -142,6 +142,8 @@ export function BookingForm({
     if (occasionParam && !formData.occasionType && !updates.occasionType) {
       updates.occasionType = occasionParam;
       hasUpdates = true;
+      // Skip to Step 2 (Theme) since Occasion (1) is known
+      setCurrentStep(2);
     }
 
     if (cityParam && !formData.location.city) {
