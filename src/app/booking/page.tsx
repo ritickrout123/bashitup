@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { Layout } from '@/components/layout';
 import { BookingForm } from '@/components/booking/BookingForm';
 import { BookingData, Theme, APIResponse } from '@/types';
@@ -19,7 +19,7 @@ function BookingContent() {
     try {
       const response = await fetch('/api/themes');
       const result: APIResponse<Theme[]> = await response.json();
-      
+
       if (result.success && result.data) {
         // Parse JSON strings for images if needed
         const themes = result.data.map(theme => ({
@@ -40,6 +40,7 @@ function BookingContent() {
   };
 
   const handleBookingSubmit = async (bookingData: BookingData) => {
+    console.log('🚀 Submitting booking data:', bookingData);
     try {
       const response = await fetch('/api/bookings', {
         method: 'POST',
@@ -49,23 +50,26 @@ function BookingContent() {
         body: JSON.stringify(bookingData),
       });
 
+      console.log('📡 Response status:', response.status);
       const result: APIResponse<Record<string, unknown>> = await response.json();
+      console.log('📦 Parsed response result:', result);
 
       if (result.success) {
-        console.log('Booking created successfully:', result.data);
+        console.log('✅ Booking created successfully:', result.data);
         // The BookingForm will handle the confirmation display
       } else {
+        console.error('❌ Booking API return success=false:', result.error);
         throw new Error(result.error?.message || 'Booking failed');
       }
     } catch (error) {
-      console.error('Booking submission error:', error);
+      console.error('💥 Booking submission error in page.tsx:', error);
       throw error; // Re-throw to let BookingForm handle the error
     }
   };
 
-  const handlePriceUpdate = (price: number) => {
+  const handlePriceUpdate = useCallback((price: number) => {
     setCurrentPrice(price);
-  };
+  }, []);
 
   if (isLoading) {
     return (

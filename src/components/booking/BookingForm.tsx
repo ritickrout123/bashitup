@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
@@ -100,7 +100,13 @@ export function BookingForm({
       }
     };
     fetchCategories();
+    fetchCategories();
   }, []);
+
+  const handlePriceChange = useCallback((price: number) => {
+    setTotalPrice(price);
+    onPriceUpdate(price);
+  }, [onPriceUpdate]);
 
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();
@@ -211,70 +217,123 @@ export function BookingForm({
     setErrors(newErrors);
   };
 
-  // Validate current step
-  const validateStep = (step: number): boolean => {
+  // Pure validator (NO state update) - used for disable logic
+  const isStepValid = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        return !!formData.occasionType;
+      case 2:
+        return !!formData.themeId;
+      case 3:
+        return (
+          !!formData.location.city &&
+          !!formData.location.address &&
+          !!formData.location.pincode
+        );
+      case 4:
+        // Date is enough at minimum, or both date & time depending on requirements.
+        return !!formData.date && !!formData.timeSlot;
+      case 5:
+        return formData.guestCount > 0;
+      case 6:
+        return (
+          !!formData.customerInfo.name &&
+          /\S+@\S+\.\S+/.test(formData.customerInfo.email) &&
+          /^\+?[\d\s-()]{10,}$/.test(formData.customerInfo.phone)
+        );
+      default:
+        return true;
+    }
+  };
+
+  // State-setting validator (ONLY on actions)
+  const validateStepAndSetErrors = (step: number): boolean => {
     const newErrors: { [key: string]: string } = {};
+    let isValid = true;
 
     switch (step) {
       case 1:
         if (!formData.occasionType) {
-          newErrors.occasionType = 'Please select an occasion type';
+          newErrors.occasionType = 'Please select an occasion';
+          isValid = false;
         }
         break;
       case 2:
         if (!formData.themeId) {
           newErrors.themeId = 'Please select a theme';
+          isValid = false;
         }
         break;
       case 3:
-        if (!formData.location.address) {
-          newErrors.address = 'Please enter the venue address';
-        }
         if (!formData.location.city) {
-          newErrors.city = 'Please enter the city';
+          newErrors.city = 'City is required';
+          isValid = false;
+        }
+        if (!formData.location.address) {
+          newErrors.address = 'Address is required';
+          isValid = false;
         }
         if (!formData.location.pincode) {
-          newErrors.pincode = 'Please enter the pincode';
+          newErrors.pincode = 'Pincode is required';
+          isValid = false;
+        } else if (!/^\d{6}$/.test(formData.location.pincode)) {
+          newErrors.pincode = 'Invalid pincode';
+          isValid = false;
         }
         break;
       case 4:
         if (!formData.date) {
-          newErrors.date = 'Please select a date';
+          newErrors.date = 'Date is required';
+          isValid = false;
         }
         if (!formData.timeSlot) {
-          newErrors.timeSlot = 'Please select a time slot';
+          newErrors.timeSlot = 'Time slot is required';
+          isValid = false;
         }
         break;
       case 5:
-        if (formData.guestCount < 1) {
-          newErrors.guestCount = 'Please enter a valid guest count';
+        if (formData.guestCount <= 0) {
+          newErrors.guestCount = 'Guest count must be greater than 0';
+          isValid = false;
         }
         break;
       case 6:
         if (!formData.customerInfo.name) {
-          newErrors.name = 'Please enter your name';
+          newErrors.name = 'Name is required';
+          isValid = false;
         }
         if (!formData.customerInfo.email) {
-          newErrors.email = 'Please enter your email';
+          newErrors.email = 'Email is required';
+          isValid = false;
         } else if (!/\S+@\S+\.\S+/.test(formData.customerInfo.email)) {
-          newErrors.email = 'Please enter a valid email';
+          newErrors.email = 'Invalid email address';
+          isValid = false;
         }
         if (!formData.customerInfo.phone) {
-          newErrors.phone = 'Please enter your phone number';
+          newErrors.phone = 'Phone number is required';
+          isValid = false;
         } else if (!/^\+?[\d\s-()]{10,}$/.test(formData.customerInfo.phone)) {
-          newErrors.phone = 'Please enter a valid phone number';
+          newErrors.phone = 'Invalid phone number';
+          isValid = false;
         }
         break;
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return isValid;
   };
+
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
 
   // Handle next step
   const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, steps.length));
+    if (validateStepAndSetErrors(currentStep)) {
+      if (currentStep < 7) {
+        setCurrentStep(prev => prev + 1);
+      }
     }
   };
 
@@ -285,7 +344,7 @@ export function BookingForm({
 
   // Handle form submission
   const handleSubmit = async () => {
-    if (!validateStep(6)) return;
+    if (!validateStepAndSetErrors(6)) return;
 
     setIsLoading(true);
     try {
@@ -318,34 +377,67 @@ export function BookingForm({
     }
   }, [formData.occasionType, formData.themeId, formData.guestCount, formData.location, formData.addons]);
 
+
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-center text-gray-800">
-              What are you celebrating?
-            </h2>
+          <div className="space-y-8">
+            <div className="text-center space-y-2">
+              <span className="inline-block px-3 py-1 bg-pink-50 text-pink-600 rounded-full text-xs font-semibold uppercase tracking-wider">
+                Step 1
+              </span>
+              <p className="text-sm text-gray-500">
+                This helps us personalize decorations for your event.
+              </p>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {occasionTypes.map((occasion) => (
-                <motion.button
-                  key={occasion.value}
-                  type="button"
-                  onClick={() => updateFormData({ occasionType: occasion.value })}
-                  className={`p-6 rounded-xl border-2 transition-all duration-300 ${formData.occasionType === occasion.value
-                    ? 'border-pink-500 bg-pink-50 shadow-lg'
-                    : 'border-gray-200 hover:border-pink-300 hover:shadow-md'
-                    }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="text-4xl mb-3">{occasion.icon}</div>
-                  <div className="font-semibold text-gray-800">{occasion.label}</div>
-                </motion.button>
-              ))}
+              {occasionTypes.map((occasion) => {
+                const isSelected = formData.occasionType === occasion.value;
+                return (
+                  <motion.button
+                    key={occasion.value}
+                    type="button"
+                    onClick={() => updateFormData({ occasionType: occasion.value })}
+                    className={`relative p-6 rounded-2xl border-2 text-left transition-all duration-300 group ${isSelected
+                      ? 'border-pink-500 bg-pink-50/50 shadow-md ring-2 ring-pink-200 ring-offset-2'
+                      : 'border-gray-100 bg-white hover:border-pink-200 hover:shadow-lg hover:-translate-y-1'
+                      }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {/* Checkmark for selected state */}
+                    {isSelected && (
+                      <div className="absolute top-4 right-4 text-pink-500">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+
+                    <div className={`text-4xl mb-4 transition-transform duration-300 ${isSelected ? 'scale-110' : 'group-hover:scale-110'}`}>
+                      {occasion.icon}
+                    </div>
+                    <div className={`font-bold text-lg mb-1 ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
+                      {occasion.label}
+                    </div>
+                    <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+                      Event Type
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
             {errors.occasionType && (
-              <p className="text-red-600 text-center">{errors.occasionType}</p>
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-500 text-center font-medium bg-red-50 py-2 rounded-lg"
+              >
+                ⚠️ {errors.occasionType}
+              </motion.p>
             )}
           </div>
         );
@@ -594,38 +686,70 @@ export function BookingForm({
 
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
-      {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          {steps.slice(0, 6).map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= step.id
-                  ? 'bg-pink-500 text-white'
-                  : 'bg-gray-200 text-gray-600'
-                  }`}
-              >
-                {step.id}
-              </div>
-              {index < 5 && (
+      {/* Progress Stepper - Enhanced */}
+      <div className="mb-10 px-2">
+        {/* Desktop Stepper */}
+        <div className="hidden md:flex items-center justify-between relative z-0">
+          {/* Connector Line */}
+          <div className="absolute top-5 left-0 w-full h-1 bg-gray-100 -z-10" />
+
+          {steps.slice(0, 6).map((step, index) => {
+            const isCompleted = currentStep > step.id;
+            const isActive = currentStep === step.id;
+
+            return (
+              <div key={step.id} className="flex flex-col items-center group cursor-default">
                 <div
-                  className={`w-12 h-1 mx-2 ${currentStep > step.id ? 'bg-pink-500' : 'bg-gray-200'
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 border-4 ${isCompleted
+                    ? 'bg-green-500 border-green-500 text-white scale-100'
+                    : isActive
+                      ? 'bg-white border-pink-500 text-pink-600 scale-110 shadow-lg'
+                      : 'bg-white border-gray-200 text-gray-400'
                     }`}
-                />
-              )}
-            </div>
-          ))}
+                >
+                  {isCompleted ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    step.id
+                  )}
+                </div>
+                <span className={`mt-2 text-xs font-semibold tracking-wide uppercase transition-colors duration-300 ${isActive ? 'text-pink-600' : isCompleted ? 'text-green-600' : 'text-gray-400'
+                  }`}>
+                  {step.title}
+                </span>
+              </div>
+            );
+          })}
         </div>
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-800">
+
+        {/* Mobile Stepper - Simplified */}
+        <div className="md:hidden flex items-center justify-between mb-6">
+          <div className="text-sm font-semibold text-gray-500">
+            Step {currentStep} of 6
+          </div>
+          <div className="flex gap-1">
+            {steps.slice(0, 6).map(step => (
+              <div key={step.id} className={`h-1.5 rounded-full transition-all duration-300 ${currentStep >= step.id ? 'w-6 bg-pink-500' : 'w-2 bg-gray-200'
+                }`} />
+            ))}
+          </div>
+        </div>
+
+        {/* Step Header & Microcopy */}
+        <div className="text-center md:mt-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             {steps[currentStep - 1]?.title}
-          </h3>
-          <p className="text-gray-600">{steps[currentStep - 1]?.description}</p>
+          </h2>
+          <p className="text-gray-500 text-sm md:text-base max-w-lg mx-auto">
+            {steps[currentStep - 1]?.description}
+          </p>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="bg-white rounded-2xl shadow-lg p-8">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-10 mb-24 md:mb-0 relative overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -633,6 +757,7 @@ export function BookingForm({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
+            className="min-h-[400px]"
           >
             {renderStepContent()}
           </motion.div>
@@ -640,31 +765,31 @@ export function BookingForm({
 
         {/* Price Calculator */}
         {currentStep >= 2 && currentStep < 7 && formData.themeId && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="mt-8 pt-6 border-t border-gray-100">
             <PriceCalculator
               occasionType={formData.occasionType as EventCategory}
               selectedTheme={availableThemes.find(t => t.id === formData.themeId)}
               guestCount={formData.guestCount}
               location={formData.location}
               addons={formData.addons}
-              onPriceChange={(price) => {
-                setTotalPrice(price);
-                onPriceUpdate(price);
-              }}
+              onPriceChange={handlePriceChange}
             />
           </div>
         )}
 
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons - Sticky Mobile */}
         {currentStep < 7 && (
-          <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
+          <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200 md:static md:bg-transparent md:border-0 md:p-0 md:mt-10 flex items-center justify-between gap-4 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none">
             <button
               type="button"
               onClick={handlePrevious}
               disabled={currentStep === 1}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-6 py-3.5 rounded-xl font-medium transition-all duration-200 ${currentStep === 1
+                ? 'opacity-0 pointer-events-none'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent hover:border-gray-200'
+                }`}
             >
-              Previous
+              Back
             </button>
 
             {currentStep === 6 ? (
@@ -672,7 +797,7 @@ export function BookingForm({
                 type="button"
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 md:flex-none px-8 py-3.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 {isLoading ? 'Processing...' : 'Complete Booking'}
               </button>
@@ -680,9 +805,11 @@ export function BookingForm({
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg hover:shadow-lg"
+                // Determine if next is allowed based on validation
+                disabled={!isStepValid(currentStep)}
+                className="flex-1 md:flex-none px-8 py-3.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:grayscale"
               >
-                Next
+                Next Step
               </button>
             )}
           </div>

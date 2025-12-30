@@ -51,14 +51,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingBooking) {
-      return NextResponse.json({
-        success: false,
-        error: {
-          code: 'SLOT_UNAVAILABLE',
-          message: 'Selected time slot is no longer available'
-        },
-        timestamp: new Date()
-      } as APIResponse<null>, { status: 409 });
+      // DEV MODE: Bypass availability check if enabled
+      if (process.env.NEXT_PUBLIC_ENABLE_ALL_SLOTS !== 'true') {
+        return NextResponse.json({
+          success: false,
+          error: {
+            code: 'SLOT_UNAVAILABLE',
+            message: 'Selected time slot is no longer available'
+          },
+          timestamp: new Date()
+        } as APIResponse<null>, { status: 409 });
+      } else {
+        console.warn('⚠️ Bypassing slot availability check due to NEXT_PUBLIC_ENABLE_ALL_SLOTS=true');
+      }
     }
 
     // Create or find customer
