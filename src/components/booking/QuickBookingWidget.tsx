@@ -12,13 +12,7 @@ interface QuickBookingWidgetProps {
   className?: string;
 }
 
-const occasionTypes: { label: string; value: EventCategory }[] = [
-  { label: 'Birthday Party', value: 'BIRTHDAY' },
-  { label: 'Anniversary', value: 'ANNIVERSARY' },
-  { label: 'Baby Shower', value: 'BABY_SHOWER' },
-  { label: 'Corporate Event', value: 'CORPORATE' },
-  { label: 'Other', value: 'OTHER' }
-];
+
 
 const tricityCities = [
   'Chandigarh',
@@ -40,6 +34,24 @@ export function QuickBookingWidget({
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
+  const [occasionTypes, setOccasionTypes] = useState<{ label: string; value: EventCategory }[]>([]);
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        if (data.success) {
+          setOccasionTypes(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Get minimum date (today)
   const today = new Date().toISOString().split('T')[0];
@@ -167,9 +179,9 @@ export function QuickBookingWidget({
                   min={today}
                   value={formData.date}
                   onChange={(e) => handleChange('date', e.target.value)}
-                  className={`w-full rounded-lg border px-4 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.date
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-300 focus:border-pink-500'
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.date
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-300 focus:border-pink-500'
                     }`}
                 />
                 {errors.date && (
@@ -195,9 +207,9 @@ export function QuickBookingWidget({
                 <select
                   value={formData.occasion}
                   onChange={(e) => handleChange('occasion', e.target.value)}
-                  className={`w-full rounded-lg border px-4 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.occasion
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-300 focus:border-pink-500'
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.occasion
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-300 focus:border-pink-500'
                     }`}
                 >
                   <option value="">Select Occasion</option>
@@ -231,9 +243,9 @@ export function QuickBookingWidget({
                 <select
                   value={formData.location}
                   onChange={(e) => handleChange('location', e.target.value)}
-                  className={`w-full rounded-lg border px-4 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.location
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-300 focus:border-pink-500'
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.location
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-300 focus:border-pink-500'
                     }`}
                 >
                   <option value="">Select City</option>
@@ -267,9 +279,9 @@ export function QuickBookingWidget({
                 <select
                   value={formData.budgetRange}
                   onChange={(e) => handleChange('budgetRange', e.target.value)}
-                  className={`w-full rounded-lg border px-4 py-3 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.budgetRange
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-300 focus:border-pink-500'
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.budgetRange
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-300 focus:border-pink-500'
                     }`}
                 >
                   <option value="">Select Budget</option>

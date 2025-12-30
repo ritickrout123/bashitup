@@ -19,14 +19,14 @@ export default function Home() {
       <USPSection />
 
       {/* How It Works Section */}
-      <HowItWorks />
+      {/* <HowItWorks /> */}
 
       {/* Trust Signals */}
-      <TrustSignals
+      {/* <TrustSignals
         clientCount={500}
         eventsCompleted={1000}
         averageRating={4.9}
-      />
+      /> */}
 
     </Layout>
   );

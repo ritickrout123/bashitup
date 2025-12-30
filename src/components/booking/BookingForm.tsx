@@ -65,13 +65,7 @@ const steps = [
   { id: 7, title: 'Confirmation', description: 'Review and confirm' }
 ];
 
-const occasionTypes = [
-  { value: 'BIRTHDAY', label: 'Birthday Party', icon: '🎂' },
-  { value: 'ANNIVERSARY', label: 'Anniversary', icon: '💕' },
-  { value: 'BABY_SHOWER', label: 'Baby Shower', icon: '👶' },
-  { value: 'CORPORATE', label: 'Corporate Event', icon: '🏢' },
-  { value: 'OTHER', label: 'Other Celebration', icon: '🎉' }
-];
+
 
 const tricityCities = [
   'Chandigarh',
@@ -91,6 +85,22 @@ export function BookingForm({
   const [isLoading, setIsLoading] = useState(false);
   const [, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [occasionTypes, setOccasionTypes] = useState<{ value: string; label: string; icon: string }[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        if (data.success) {
+          setOccasionTypes(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuth();

@@ -188,8 +188,7 @@ enum EventCategory {
   BIRTHDAY
   ANNIVERSARY
   BABY_SHOWER
-  CORPORATE
-  OTHER
+  WEDDING_PROPOSAL
 }
 
 enum BookingStatus {

@@ -8,7 +8,7 @@ interface HeroSectionProps {
   backgroundVideo?: string;
   backgroundImage?: string;
   ctaText?: string;
-  onBookingClick?: () => void;
+  onBookingClick?: () => '/bookings';
 }
 
 export function HeroSection({

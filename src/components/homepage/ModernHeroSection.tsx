@@ -60,17 +60,17 @@ export function ModernHeroSection({
   const getNavLinkClasses = (path: string) => {
     const baseClasses = 'transition-all duration-300 font-medium relative';
     const isActive = isActivePath(path);
-    
+
     if (isScrolled) {
-      return `${baseClasses} ${isActive 
-        ? 'text-purple-600 font-semibold' 
+      return `${baseClasses} ${isActive
+        ? 'text-purple-600 font-semibold'
         : 'text-gray-800 hover:text-purple-600'
-      }`;
+        }`;
     } else {
-      return `${baseClasses} ${isActive 
-        ? 'text-yellow-300 font-semibold' 
+      return `${baseClasses} ${isActive
+        ? 'text-yellow-300 font-semibold'
         : 'text-white/90 hover:text-yellow-300'
-      }`;
+        }`;
     }
   };
 
@@ -78,25 +78,25 @@ export function ModernHeroSection({
   const getMobileNavLinkClasses = (path: string) => {
     const baseClasses = 'block px-4 py-3 rounded-lg transition-colors font-medium';
     const isActive = isActivePath(path);
-    
+
     if (isScrolled) {
-      return `${baseClasses} ${isActive 
-        ? 'text-purple-600 bg-purple-50 font-semibold' 
+      return `${baseClasses} ${isActive
+        ? 'text-purple-600 bg-purple-50 font-semibold'
         : 'text-gray-800 hover:bg-gray-100'
-      }`;
+        }`;
     } else {
-      return `${baseClasses} ${isActive 
-        ? 'text-yellow-300 bg-white/20 font-semibold' 
+      return `${baseClasses} ${isActive
+        ? 'text-yellow-300 bg-white/20 font-semibold'
         : 'text-white hover:bg-white/20'
-      }`;
+        }`;
     }
   };
 
   // Dynamic styles based on scroll position
-  const navBgClass = isScrolled 
-    ? 'bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg' 
+  const navBgClass = isScrolled
+    ? 'bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg'
     : 'bg-white/10 backdrop-blur-md border-b border-white/20';
-  
+
   const textClass = isScrolled ? 'text-gray-800' : 'text-white/90';
   const logoClass = isScrolled ? 'text-gray-800' : 'text-white';
   const hoverClass = isScrolled ? 'hover:text-purple-600' : 'hover:text-yellow-300';
@@ -108,7 +108,7 @@ export function ModernHeroSection({
     <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <div 
+        <div
           className="absolute inset-0 w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600"
           style={{
             backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
@@ -121,7 +121,7 @@ export function ModernHeroSection({
       </div>
 
       {/* Top Navigation Bar - Fixed/Sticky with adaptive styling */}
-      <motion.nav 
+      <motion.nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBgClass}`}
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -141,7 +141,7 @@ export function ModernHeroSection({
             </motion.div>
 
             {/* Desktop Navigation */}
-            <motion.div 
+            <motion.div
               className="hidden lg:flex items-center space-x-8"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -186,7 +186,7 @@ export function ModernHeroSection({
             </motion.div>
 
             {/* User Menu & CTA */}
-            <motion.div 
+            <motion.div
               className="hidden lg:flex items-center space-x-4"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -214,12 +214,12 @@ export function ModernHeroSection({
                   <Link href="/login" className={`${textClass} ${hoverClass} transition-colors font-medium`}>
                     Login
                   </Link>
-                  <Link 
-                    href="/register" 
-                    className={`${isScrolled 
-                      ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' 
+                  <Link
+                    href="/register"
+                    className={`${isScrolled
+                      ? 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                       : 'bg-white/20 text-white hover:bg-white/30'
-                    } px-4 py-2 rounded-lg font-medium transition-all duration-300`}
+                      } px-4 py-2 rounded-lg font-medium transition-all duration-300`}
                   >
                     Register
                   </Link>
@@ -256,7 +256,7 @@ export function ModernHeroSection({
 
           {/* Mobile Menu */}
           {isMenuOpen && (
-            <motion.div 
+            <motion.div
               className={`lg:hidden ${mobileMenuBg} backdrop-blur-md rounded-xl mt-4 mb-4 shadow-2xl border overflow-hidden`}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -272,7 +272,7 @@ export function ModernHeroSection({
                 <Link href="/portfolio" className={getMobileNavLinkClasses('/portfolio')}>
                   Portfolio
                 </Link>
-                
+
                 <div className={`border-t ${isScrolled ? 'border-gray-200' : 'border-white/20'} pt-4 mt-4`}>
                   {user ? (
                     <>
@@ -301,7 +301,7 @@ export function ModernHeroSection({
                       </Link>
                     </>
                   )}
-                  
+
                   <Link
                     href="/booking"
                     className="block mx-4 mt-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 px-6 py-3 rounded-full font-bold text-center hover:from-yellow-300 hover:to-orange-400 transition-all duration-300 shadow-lg"
@@ -324,7 +324,7 @@ export function ModernHeroSection({
             transition={{ duration: 0.8, delay: 0.8 }}
           >
             {/* Main Tagline */}
-            <motion.h1 
+            <motion.h1
               className="mb-8 text-5xl md:text-7xl lg:text-8xl font-bold leading-tight"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -356,7 +356,7 @@ export function ModernHeroSection({
             </motion.h1>
 
             {/* Subtitle */}
-            <motion.p 
+            <motion.p
               className="mb-12 text-xl md:text-3xl lg:text-4xl font-light max-w-4xl mx-auto leading-relaxed"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -376,7 +376,7 @@ export function ModernHeroSection({
             >
               <motion.button
                 onClick={handleBookingClick}
-                className="inline-flex items-center justify-center px-12 py-6 text-2xl font-bold text-gray-900 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-2xl"
+                className="inline-flex items-center justify-center px-8 py-4 text-lg md:px-10 md:py-5 md:text-xl lg:px-12 lg:py-6 lg:text-2xl font-bold text-gray-900 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-2xl"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}

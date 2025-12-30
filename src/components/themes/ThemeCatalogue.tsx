@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Theme, EventCategory } from '@/types';
 
@@ -11,106 +11,32 @@ interface ThemeFilters {
 }
 
 interface ThemeCatalogueProps {
-  themes?: Theme[];
+  initialThemes?: Theme[]; // Optional initial data
   onThemeSelect?: (theme: Theme) => void;
   showFilters?: boolean;
   title?: string;
   subtitle?: string;
 }
 
-// Mock theme data - would be fetched from API
-const mockThemes: Theme[] = [
-  {
-    id: '1',
-    name: 'Enchanted Garden',
-    description: 'Magical garden theme with fairy lights and florals',
-    category: 'BIRTHDAY',
-    images: ['/images/themes/enchanted-garden-1.jpg', '/images/themes/enchanted-garden-2.jpg'],
-    videoUrl: '/videos/enchanted-garden.mp4',
-    basePrice: 8500,
-    setupTime: 45,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '2',
-    name: 'Golden Anniversary',
-    description: 'Elegant gold and cream celebration setup',
-    category: 'ANNIVERSARY',
-    images: ['/images/themes/golden-anniversary-1.jpg'],
-    basePrice: 12000,
-    setupTime: 60,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '3',
-    name: 'Baby Elephant Safari',
-    description: 'Adorable safari theme for baby celebrations',
-    category: 'BABY_SHOWER',
-    images: ['/images/themes/baby-safari-1.jpg'],
-    basePrice: 7500,
-    setupTime: 40,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '4',
-    name: 'Corporate Excellence',
-    description: 'Professional and sophisticated corporate setup',
-    category: 'CORPORATE',
-    images: ['/images/themes/corporate-1.jpg'],
-    basePrice: 15000,
-    setupTime: 75,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '5',
-    name: 'Unicorn Dreams',
-    description: 'Magical unicorn theme with pastels and sparkles',
-    category: 'BIRTHDAY',
-    images: ['/images/themes/unicorn-1.jpg'],
-    basePrice: 9000,
-    setupTime: 50,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '6',
-    name: 'Vintage Romance',
-    description: 'Classic vintage setup with roses and lace',
-    category: 'ANNIVERSARY',
-    images: ['/images/themes/vintage-romance-1.jpg'],
-    basePrice: 11500,
-    setupTime: 55,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-];
+
 
 const categoryLabels: Record<EventCategory | 'ALL', string> = {
   ALL: 'All Occasions',
-  BIRTHDAY: 'Birthday',
+  BIRTHDAY: 'Birthdays',
   ANNIVERSARY: 'Anniversary',
-  BABY_SHOWER: 'Baby Shower',
-  CORPORATE: 'Corporate',
-  OTHER: 'Other'
+  BABY_SHOWER: 'Baby Showers',
+  WEDDING_PROPOSAL: 'Wedding Proposals'
 };
 
 export function ThemeCatalogue({
-  themes = mockThemes,
+  initialThemes = [],
   onThemeSelect,
   showFilters = true,
   title = "Choose Your Perfect Theme",
   subtitle = "Browse our curated collection of professionally designed themes"
 }: ThemeCatalogueProps) {
+  const [themes, setThemes] = useState<Theme[]>(initialThemes);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<ThemeFilters>({
     category: 'ALL',
     priceRange: 'ALL',
@@ -118,6 +44,26 @@ export function ThemeCatalogue({
   });
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Fetch themes from API
+  useEffect(() => {
+    const fetchThemes = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/themes');
+        const data = await response.json();
+        if (data.success) {
+          setThemes(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch themes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchThemes();
+  }, []);
 
   // Filter themes based on current filters
   const filteredThemes = useMemo(() => {
@@ -201,143 +147,147 @@ export function ThemeCatalogue({
           </p>
         </motion.div>
 
-        {/* Filters */}
-        {showFilters && (
-          <motion.div
-            className="mb-8 bg-white rounded-2xl p-6 shadow-lg"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="flex flex-wrap gap-6 items-center justify-between">
-              {/* Category Filter */}
-              <div className="flex flex-wrap gap-2">
-                <span className="text-sm font-medium text-gray-700 mr-2">Category:</span>
-                {Object.entries(categoryLabels).map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => handleFilterChange('category', key)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                      filters.category === key
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Price Range Filter */}
-              <div className="flex flex-wrap gap-2">
-                <span className="text-sm font-medium text-gray-700 mr-2">Price:</span>
-                {[
-                  { key: 'ALL', label: 'All Prices' },
-                  { key: 'LOW', label: 'Under ₹8K' },
-                  { key: 'MID', label: '₹8K - ₹12K' },
-                  { key: 'HIGH', label: 'Above ₹12K' }
-                ].map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => handleFilterChange('priceRange', key)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                      filters.priceRange === key
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {/* View Mode Toggle */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all duration-300 ${
-                    viewMode === 'grid'
-                      ? 'bg-pink-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all duration-300 ${
-                    viewMode === 'list'
-                      ? 'bg-pink-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Results count */}
-            <div className="mt-4 text-sm text-gray-600">
-              Showing {filteredThemes.length} of {themes.length} themes
-            </div>
-          </motion.div>
-        )}
-
-        {/* Themes Grid/List */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${viewMode}-${JSON.stringify(filters)}`}
-            className={viewMode === 'grid' 
-              ? 'grid gap-6 md:grid-cols-2 lg:grid-cols-3' 
-              : 'space-y-6'
-            }
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {filteredThemes.map((theme) => (
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+          </div>
+        ) : (
+          <>
+            {/* Filters */}
+            {showFilters && (
               <motion.div
-                key={theme.id}
-                variants={itemVariants}
-                className="group"
+                className="mb-8 bg-white rounded-2xl p-6 shadow-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <ThemeCard
-                  theme={theme}
-                  onSelect={() => handleThemeSelect(theme)}
-                  viewMode={viewMode}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+                <div className="flex flex-wrap gap-6 items-center justify-between">
+                  {/* Category Filter */}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-sm font-medium text-gray-700 mr-2">Category:</span>
+                    {Object.entries(categoryLabels).map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => handleFilterChange('category', key)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${filters.category === key
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
 
-        {/* Empty state */}
-        {filteredThemes.length === 0 && (
-          <motion.div
-            className="text-center py-16"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="text-6xl mb-4">🎨</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              No themes found
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Try adjusting your filters to see more themes
-            </p>
-            <button
-              onClick={() => setFilters({ category: 'ALL', priceRange: 'ALL', mood: 'ALL' })}
-              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg transition-all duration-300"
-            >
-              Clear Filters
-            </button>
-          </motion.div>
+                  {/* Price Range Filter */}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-sm font-medium text-gray-700 mr-2">Price:</span>
+                    {[
+                      { key: 'ALL', label: 'All Prices' },
+                      { key: 'LOW', label: 'Under ₹8K' },
+                      { key: 'MID', label: '₹8K - ₹12K' },
+                      { key: 'HIGH', label: 'Above ₹12K' }
+                    ].map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => handleFilterChange('priceRange', key)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${filters.priceRange === key
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* View Mode Toggle */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded-lg transition-all duration-300 ${viewMode === 'grid'
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded-lg transition-all duration-300 ${viewMode === 'list'
+                        ? 'bg-pink-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Results count */}
+                <div className="mt-4 text-sm text-gray-600">
+                  Showing {filteredThemes.length} of {themes.length} themes
+                </div>
+              </motion.div>
+            )}
+
+            {/* Themes Grid/List */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${viewMode}-${JSON.stringify(filters)}`}
+                className={viewMode === 'grid'
+                  ? 'grid gap-6 md:grid-cols-2 lg:grid-cols-3'
+                  : 'space-y-6'
+                }
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {filteredThemes.map((theme) => (
+                  <motion.div
+                    key={theme.id}
+                    variants={itemVariants}
+                    className="group"
+                  >
+                    <ThemeCard
+                      theme={theme}
+                      onSelect={() => handleThemeSelect(theme)}
+                      viewMode={viewMode}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Empty state */}
+            {filteredThemes.length === 0 && (
+              <motion.div
+                className="text-center py-16"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className="text-6xl mb-4">🎨</div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  No themes found
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Try adjusting your filters to see more themes
+                </p>
+                <button
+                  onClick={() => setFilters({ category: 'ALL', priceRange: 'ALL', mood: 'ALL' })}
+                  className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full hover:shadow-lg transition-all duration-300"
+                >
+                  Clear Filters
+                </button>
+              </motion.div>
+            )}
+          </>
         )}
       </div>
     </section>
@@ -367,16 +317,14 @@ function ThemeCard({ theme, onSelect, viewMode }: ThemeCardProps) {
             <img
               src={(() => {
                 try {
-                  const images = JSON.parse(theme.images);
-                  return images[0] || '/images/placeholder-theme.jpg';
+                  return theme.images[0] || '/images/placeholder-theme.jpg';
                 } catch {
                   return '/images/placeholder-theme.jpg';
                 }
               })()}
               alt={theme.name}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
               onLoad={() => setImageLoaded(true)}
               onError={() => setImageLoaded(true)}
             />
@@ -440,16 +388,15 @@ function ThemeCard({ theme, onSelect, viewMode }: ThemeCardProps) {
             }
           })()}
           alt={theme.name}
-          className={`absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-500 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={`absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
           onLoad={() => setImageLoaded(true)}
           onError={() => setImageLoaded(true)}
         />
-        
+
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
+
         {/* Category badge */}
         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-gray-800">
           {categoryLabels[theme.category]}

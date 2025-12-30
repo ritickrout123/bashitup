@@ -2,7 +2,7 @@
 // These types match the Prisma schema models
 
 export type UserRole = 'CUSTOMER' | 'ADMIN' | 'DECORATOR';
-export type EventCategory = 'BIRTHDAY' | 'ANNIVERSARY' | 'BABY_SHOWER' | 'CORPORATE' | 'OTHER';
+export type EventCategory = 'BIRTHDAY' | 'ANNIVERSARY' | 'BABY_SHOWER' | 'WEDDING_PROPOSAL';
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 
