@@ -8,7 +8,7 @@ interface HeroSectionProps {
   backgroundVideo?: string;
   backgroundImage?: string;
   ctaText?: string;
-  onBookingClick?: () => '/bookings';
+  onBookingClick?: () => '/booking';
 }
 
 export function HeroSection({
@@ -38,7 +38,7 @@ export function HeroSection({
         value: 1
       });
     }
-    
+
     if (onBookingClick) {
       onBookingClick();
     } else {
@@ -61,19 +61,17 @@ export function HeroSection({
             muted
             loop
             playsInline
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-              isVideoLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
           >
             <source src={backgroundVideo} type="video/mp4" />
           </video>
         )}
-        
+
         {/* Fallback background image */}
-        <div 
-          className={`absolute inset-0 w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 transition-opacity duration-1000 ${
-            backgroundVideo && isVideoLoaded ? 'opacity-0' : 'opacity-100'
-          }`}
+        <div
+          className={`absolute inset-0 w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 transition-opacity duration-1000 ${backgroundVideo && isVideoLoaded ? 'opacity-0' : 'opacity-100'
+            }`}
           style={{
             backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
             backgroundSize: 'cover',
@@ -81,7 +79,7 @@ export function HeroSection({
             backgroundRepeat: 'no-repeat'
           }}
         />
-        
+
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-pink-500/80 to-purple-600/80" />
       </div>
@@ -94,7 +92,7 @@ export function HeroSection({
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           {/* Main Tagline */}
-          <motion.h1 
+          <motion.h1
             className="mb-6 text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -120,7 +118,7 @@ export function HeroSection({
           </motion.h1>
 
           {/* Subtitle */}
-          <motion.p 
+          <motion.p
             className="mb-8 text-xl md:text-2xl lg:text-3xl font-light max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -129,7 +127,7 @@ export function HeroSection({
             Event Décor at Your Doorstep in{' '}
             <motion.span
               className="font-bold text-yellow-300"
-              animate={{ 
+              animate={{
                 scale: [1, 1.1, 1],
                 textShadow: [
                   "0 0 0px rgba(255,255,255,0)",
@@ -137,7 +135,7 @@ export function HeroSection({
                   "0 0 0px rgba(255,255,255,0)"
                 ]
               }}
-              transition={{ 
+              transition={{
                 duration: 2,
                 repeat: Infinity,
                 repeatDelay: 3
@@ -167,12 +165,12 @@ export function HeroSection({
                 whileHover={{ x: "0%" }}
                 transition={{ duration: 0.3 }}
               />
-              
+
               {/* Button text */}
               <span className="relative z-10 group-hover:text-white transition-colors duration-300">
                 {ctaText}
               </span>
-              
+
               {/* Arrow icon */}
               <motion.svg
                 className="relative z-10 ml-2 w-5 h-5 group-hover:text-white transition-colors duration-300"
@@ -253,7 +251,7 @@ export function HeroSection({
           ease: "easeInOut"
         }}
       />
-      
+
       <motion.div
         className="absolute bottom-20 left-10 w-32 h-32 rounded-full bg-white/5 backdrop-blur-sm"
         animate={{
