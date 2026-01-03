@@ -225,4 +225,5 @@ export interface AuthContextType {
   register: (userData: UserRegistration) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
+  mutate: () => Promise<void>;
 }

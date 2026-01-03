@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginCredentials } from '@/types';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
+import { LoadingButton } from '@/components/ui/LoadingButton';
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -68,11 +71,13 @@ export default function LoginForm({
     e.preventDefault();
 
     if (!validateForm()) {
+      showErrorToast('Please fix the errors in the form');
       return;
     }
 
     try {
       await login(formData);
+      showSuccessToast('Welcome back! Login successful.');
 
       if (onSuccess) {
         onSuccess();
@@ -81,7 +86,9 @@ export default function LoginForm({
         window.location.href = redirectTo;
       }
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Login failed');
+      const message = error instanceof Error ? error.message : 'Login failed';
+      setSubmitError(message);
+      showErrorToast(message);
     }
   };
 
@@ -169,28 +176,30 @@ export default function LoginForm({
         )}
 
         {/* Submit Button */}
-        <button
+        <LoadingButton
           type="submit"
-          disabled={isLoading}
-          className="w-full relative overflow-hidden group py-3.5 px-4 rounded-xl text-white font-bold text-lg shadow-lg shadow-purple-200 transition-all duration-300
-            bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500
-            disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-1"
+          isLoading={isLoading}
+          loadingText="Signing In..."
+          className="w-full py-3.5 text-lg shadow-lg shadow-purple-200 transform hover:-translate-y-1"
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-              Signing In...
-            </div>
-          ) : (
-            <span className="flex items-center justify-center">
-              Sign In
-              <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </span>
-          )}
-        </button>
+          <span className="flex items-center justify-center">
+            Sign In
+            <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </span>
+        </LoadingButton>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        <GoogleAuthButton text="Sign in with Google" />
 
         {/* Register Link */}
         <div className="text-center mt-6">
@@ -205,6 +214,6 @@ export default function LoginForm({
           </p>
         </div>
       </form>
-    </div>
+    </div >
   );
 }

@@ -8,6 +8,8 @@ import { BookingData, Theme, TimeSlot, EventCategory, Location } from '@/types';
 import { PriceCalculator } from './PriceCalculator';
 import { AvailabilityChecker } from './AvailabilityChecker';
 import { BookingConfirmation } from './BookingConfirmation';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
+import { LoadingButton } from '@/components/ui/LoadingButton';
 
 interface BookingFormProps {
   onSubmit: (booking: BookingData) => void;
@@ -361,10 +363,13 @@ export function BookingForm({
       };
 
       await onSubmit(bookingData);
+      showSuccessToast('Booking submitted successfully! 🎉');
       setCurrentStep(7); // Move to confirmation step
     } catch (error) {
       console.error('Booking submission error:', error);
-      setErrors({ submit: 'Failed to submit booking. Please try again.' });
+      const message = 'Failed to submit booking. Please try again.';
+      setErrors({ submit: message });
+      showErrorToast(message);
     } finally {
       setIsLoading(false);
     }
@@ -793,14 +798,15 @@ export function BookingForm({
             </button>
 
             {currentStep === 6 ? (
-              <button
+              <LoadingButton
                 type="button"
                 onClick={handleSubmit}
-                disabled={isLoading}
-                className="flex-1 md:flex-none px-8 py-3.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                isLoading={isLoading}
+                loadingText="Processing..."
+                className="flex-1 md:flex-none px-8 py-3.5 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
               >
-                {isLoading ? 'Processing...' : 'Complete Booking'}
-              </button>
+                Complete Booking
+              </LoadingButton>
             ) : (
               <button
                 type="button"

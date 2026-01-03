@@ -80,13 +80,12 @@ export default function DashboardPage() {
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Role</dt>
                     <dd className="text-sm text-gray-900">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === 'ADMIN' 
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'ADMIN'
                           ? 'bg-red-100 text-red-800'
                           : user.role === 'DECORATOR'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
                         {user.role}
                       </span>
                     </dd>
@@ -102,6 +101,12 @@ export default function DashboardPage() {
                   Quick Actions
                 </h3>
                 <div className="space-y-3">
+                  <a
+                    href="/dashboard/profile"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200"
+                  >
+                    Update Profile
+                  </a>
                   <a
                     href="/themes"
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200"

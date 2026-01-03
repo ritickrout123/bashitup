@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AppProviders } from "@/components/providers/AppProviders";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -38,9 +38,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="BashItNow" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <AuthProvider>
+        <AppProviders>
           {children}
-        </AuthProvider>
+        </AppProviders>
       </body>
     </html>
   );

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  AuthContextType, 
-  LoginCredentials, 
-  UserRegistration, 
-  User, 
-  APIResponse, 
-  AuthResponse 
+import {
+  AuthContextType,
+  LoginCredentials,
+  UserRegistration,
+  User,
+  APIResponse,
+  AuthResponse
 } from '@/types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -177,6 +177,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     logout,
     refreshToken,
+    mutate: checkAuthStatus,
   };
 
   return (

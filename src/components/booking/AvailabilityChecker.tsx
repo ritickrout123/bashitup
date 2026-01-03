@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { TimeSlot, Location } from '@/types';
+import { Loader } from '@/components/ui/Loader';
+import { showErrorToast } from '@/lib/toast';
 
 interface AvailabilityCheckerProps {
   selectedDate: Date | null;
@@ -79,7 +81,9 @@ export function AvailabilityChecker({
       }
 
     } catch (err) {
-      setError('Failed to check availability. Please try again.');
+      const message = 'Failed to check availability. Please try again.';
+      setError(message);
+      showErrorToast(message);
       console.error('Availability check error:', err);
 
       // Fallback to default slots if API fails
@@ -156,8 +160,8 @@ export function AvailabilityChecker({
 
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
-              <span className="ml-2 text-gray-600">Checking availability...</span>
+              <Loader size="lg" color="primary" />
+              <span className="ml-3 text-gray-600 font-medium">Checking availability...</span>
             </div>
           ) : error ? (
             <div className="text-center py-8">
