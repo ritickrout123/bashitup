@@ -8,9 +8,17 @@ interface LoginFormProps {
   onSuccess?: () => void;
   redirectTo?: string;
   className?: string;
+  title?: string;
+  subtitle?: string;
 }
 
-export default function LoginForm({ onSuccess, redirectTo = '/', className = '' }: LoginFormProps) {
+export default function LoginForm({
+  onSuccess,
+  redirectTo = '/',
+  className = '',
+  title = 'Welcome Back',
+  subtitle = 'Sign in to continue your celebration journey'
+}: LoginFormProps) {
   const { login, isLoading } = useAuth();
   const [formData, setFormData] = useState<LoginCredentials>({
     email: '',
@@ -82,10 +90,10 @@ export default function LoginForm({ onSuccess, redirectTo = '/', className = '' 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-            Welcome Back
+            {title}
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Sign in to continue your celebration journey
+            {subtitle}
           </p>
         </div>
 

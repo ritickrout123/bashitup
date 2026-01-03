@@ -44,6 +44,14 @@ function LoginContent() {
     return null;
   }
 
+  // Determine content based on redirect source
+  const isBookingRedirect = redirectTo && redirectTo.includes('booking');
+
+  const formTitle = isBookingRedirect ? 'Almost There!' : 'Welcome Back';
+  const formSubtitle = isBookingRedirect
+    ? 'Sign in to save your progress and complete your booking.'
+    : 'Sign in to continue your celebration journey';
+
   return (
     <Layout showFooter={false} headerTransparent={false} className="bg-white">
       <div className="flex flex-grow min-h-[calc(100vh-64px)] lg:min-h-[calc(100vh-80px)]">
@@ -58,10 +66,12 @@ function LoginContent() {
 
           <div className="relative z-10 text-center px-10">
             <h1 className="text-5xl font-extrabold text-white mb-6 leading-tight">
-              Celebrate Life's<br />Best Moments
+              {isBookingRedirect ? 'Complete Your\nCelebration' : "Celebrate Life's\nBest Moments"}
             </h1>
             <p className="text-xl text-purple-100 max-w-lg mx-auto leading-relaxed">
-              From intimate gatherings to grand celebrations, we bring your vision to life with style and elegance.
+              {isBookingRedirect
+                ? 'You are just one step away from finalizing your dream event.'
+                : 'From intimate gatherings to grand celebrations, we bring your vision to life with style and elegance.'}
             </p>
             <div className="mt-10 flex justify-center space-x-4">
               <div className="w-3 h-3 rounded-full bg-white opacity-100"></div>
@@ -89,6 +99,8 @@ function LoginContent() {
             <LoginForm
               redirectTo={redirectTo}
               className="w-full"
+              title={formTitle}
+              subtitle={formSubtitle}
             />
 
             <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-500">

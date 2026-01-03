@@ -44,6 +44,14 @@ function RegisterContent() {
     return null;
   }
 
+  // Determine content based on redirect source
+  const isBookingRedirect = redirectTo && redirectTo.includes('booking');
+
+  const formTitle = isBookingRedirect ? 'Join to Book' : 'Join the Celebration';
+  const formSubtitle = isBookingRedirect
+    ? 'Create an account to finalize your event booking.'
+    : 'Unlock exclusive themes, manage bookings, and create unforgettable memories.';
+
   return (
     <Layout showFooter={false} headerTransparent={false} className="bg-white">
       <div className="flex flex-grow min-h-[calc(100vh-64px)] lg:min-h-[calc(100vh-80px)]">
@@ -58,10 +66,12 @@ function RegisterContent() {
 
           <div className="relative z-10 text-center px-10">
             <h1 className="text-5xl font-extrabold text-white mb-6 leading-tight">
-              Join the<br />Celebration
+              {isBookingRedirect ? 'Make It\nOfficial' : 'Join the\nCelebration'}
             </h1>
             <p className="text-xl text-pink-100 max-w-lg mx-auto leading-relaxed">
-              Unlock exclusive themes, manage bookings, and create unforgettable memories with BashItNow.
+              {isBookingRedirect
+                ? 'Your dream event is waiting. Create an account to make it happen!'
+                : 'Unlock exclusive themes, manage bookings, and create unforgettable memories with BashItNow.'}
             </p>
             <div className="mt-10 flex justify-center space-x-4">
               <div className="w-3 h-3 rounded-full bg-white opacity-50"></div>
@@ -89,6 +99,8 @@ function RegisterContent() {
             <RegisterForm
               redirectTo={redirectTo}
               className="w-full"
+              title={formTitle}
+              subtitle={formSubtitle}
             />
 
             <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-500">

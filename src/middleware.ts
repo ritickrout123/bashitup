@@ -5,6 +5,7 @@ import { verifyAccessToken, hasRole } from '@/lib/auth-edge';
 const protectedRoutes = {
   '/admin': ['ADMIN'],
   '/dashboard': ['CUSTOMER', 'ADMIN', 'DECORATOR'],
+  '/booking': ['CUSTOMER', 'ADMIN', 'DECORATOR'],
   '/decorator': ['DECORATOR', 'ADMIN'],
   '/api/admin': ['ADMIN'],
   '/api/decorator': ['DECORATOR', 'ADMIN'],
@@ -22,7 +23,6 @@ const publicRoutes = [
   '/portfolio',
   '/about',
   '/contact',
-  '/booking',
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/refresh',

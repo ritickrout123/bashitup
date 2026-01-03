@@ -8,6 +8,8 @@ interface RegisterFormProps {
   onSuccess?: () => void;
   redirectTo?: string;
   className?: string;
+  title?: string;
+  subtitle?: string;
 }
 
 interface FormErrors {
@@ -18,7 +20,13 @@ interface FormErrors {
   confirmPassword?: string;
 }
 
-export default function RegisterForm({ onSuccess, redirectTo = '/', className = '' }: RegisterFormProps) {
+export default function RegisterForm({
+  onSuccess,
+  redirectTo = '/',
+  className = '',
+  title = 'Join BashItNow',
+  subtitle = 'Start booking amazing event decorations in minutes'
+}: RegisterFormProps) {
   const { register, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
@@ -144,10 +152,10 @@ export default function RegisterForm({ onSuccess, redirectTo = '/', className = 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="text-center mb-6">
           <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-            Join BashItNow
+            {title}
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Start booking amazing event decorations in minutes
+            {subtitle}
           </p>
         </div>
 
