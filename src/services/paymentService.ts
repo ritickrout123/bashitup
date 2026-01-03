@@ -1,4 +1,5 @@
-import { createPaymentIntent, verifyPaymentIntent, isStripeConfigured } from '@/lib/stripe';
+// Client-side service should NOT import from @/lib/stripe
+// import { createPaymentIntent, verifyPaymentIntent, isStripeConfigured } from '@/lib/stripe';
 
 export interface PaymentIntentData {
   amount: number;
@@ -13,6 +14,10 @@ export interface CallbackData {
   notes?: string;
 }
 
+const isStripeConfigured = () => {
+  return !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+};
+
 export class PaymentService {
   static async createPaymentIntent(data: PaymentIntentData) {
     if (!isStripeConfigured()) {
@@ -22,19 +27,37 @@ export class PaymentService {
         requiresCallback: true,
       };
     }
-    
+
     try {
-      const paymentIntent = await createPaymentIntent(data.amount, data.bookingId);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/payments/create-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: data.amount,
+          bookingId: data.bookingId
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create payment intent');
+      }
+
       return {
         success: true,
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
+        clientSecret: result.clientSecret,
+        paymentIntentId: result.paymentIntentId,
       };
     } catch (error) {
       console.error('Payment intent creation failed:', error);
       return {
         success: false,
-        error: 'Failed to create payment intent',
+        error: error instanceof Error ? error.message : 'Failed to create payment intent',
       };
     }
   }
@@ -46,28 +69,38 @@ export class PaymentService {
         error: 'Payment system not configured',
       };
     }
-    
+
     try {
-      const paymentIntent = await verifyPaymentIntent(paymentIntentId);
-      
-      if (paymentIntent.status !== 'succeeded') {
-        return {
-          success: false,
-          error: 'Payment not completed',
-        };
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/payments/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          paymentIntentId,
+          bookingId
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to confirm payment');
       }
 
       return {
         success: true,
-        paymentStatus: paymentIntent.status,
-        amount: paymentIntent.amount / 100, // Convert from cents
+        paymentStatus: result.paymentStatus,
+        amount: result.booking.paidAmount,
         bookingId,
       };
     } catch (error) {
       console.error('Payment confirmation failed:', error);
       return {
         success: false,
-        error: 'Failed to confirm payment',
+        error: error instanceof Error ? error.message : 'Failed to confirm payment',
       };
     }
   }
@@ -76,7 +109,7 @@ export class PaymentService {
     try {
       // Here you would typically integrate with a CRM or notification system
       console.log('Scheduling callback for booking:', data.bookingId);
-      
+
       return {
         success: true,
         message: 'Callback scheduled successfully. Our team will contact you soon.',
@@ -95,7 +128,7 @@ export class PaymentService {
     const tokenPercentage = 0.2;
     const minToken = 500;
     const maxToken = 2000;
-    
+
     const calculatedToken = Math.round(totalAmount * tokenPercentage);
     return Math.max(minToken, Math.min(maxToken, calculatedToken));
   }

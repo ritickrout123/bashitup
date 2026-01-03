@@ -44,7 +44,7 @@ export function PriceCalculator({
     if (!selectedTheme) return;
 
     setIsCalculating(true);
-    
+
     try {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -52,7 +52,7 @@ export function PriceCalculator({
       // Determine budget range based on theme base price and guest count
       const estimatedBudget = selectedTheme.basePrice * (guestCount / 25);
       let budgetRange = '5000-10000';
-      
+
       if (estimatedBudget > 50000) budgetRange = '50000+';
       else if (estimatedBudget > 20000) budgetRange = '20000-50000';
       else if (estimatedBudget > 10000) budgetRange = '10000-20000';
@@ -114,7 +114,7 @@ export function PriceCalculator({
     const newAddons = selectedAddons.includes(addonId)
       ? selectedAddons.filter(id => id !== addonId)
       : [...selectedAddons, addonId];
-    
+
     setSelectedAddons(newAddons);
   };
 
@@ -147,7 +147,7 @@ export function PriceCalculator({
             </div>
           )}
         </div>
-        
+
         {priceBreakdown && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -216,7 +216,7 @@ export function PriceCalculator({
           <h4 className="text-lg font-semibold text-gray-800 mb-4">
             Price Breakdown
           </h4>
-          
+
           <div className="space-y-3">
             {/* Base Price */}
             <div className="flex justify-between items-center">
@@ -291,7 +291,7 @@ export function PriceCalculator({
           </div>
 
           {/* Payment Info */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          {/* <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <div className="flex items-start">
               <div className="text-blue-500 mr-3 mt-0.5">💳</div>
               <div>
@@ -304,7 +304,7 @@ export function PriceCalculator({
                 </ul>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Savings Info */}
           {selectedAddons.length > 2 && (

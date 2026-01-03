@@ -70,8 +70,15 @@ export function BookingConfirmation({
 
       const data = await response.json();
       if (data.success) {
-        setBookingId(data.booking.id);
-        setShowPaymentModal(true);
+        if (data.data.checkoutUrl) {
+          console.log('Redirecting to Stripe Checkout...', data.data.checkoutUrl);
+          window.location.href = data.data.checkoutUrl;
+          return;
+        } else {
+          console.error('Checkout URL missing in response', data);
+          alert('Payment initialization failed: Stripe configuration issue.');
+          return;
+        }
       } else {
         throw new Error(data.error || 'Failed to create booking');
       }

@@ -90,11 +90,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Calculate total amount (simplified - would use pricing service)
-    const baseAmount = theme.basePrice * (bookingData.guestCount / 25);
-    const locationSurcharge = baseAmount * 0.1; // 10% location surcharge
-    const subtotal = baseAmount + locationSurcharge;
-    const taxes = subtotal * 0.18; // 18% GST
+    // Calculate total amount using shared pricing logic
+    const { calculateDetailedPrice } = await import('@/lib/pricing');
+
+    // Determine budget range based on theme base price (similar to frontend logic)
+    const estimatedBudget = theme.basePrice * (bookingData.guestCount / 25);
+    let budgetRange = '5000-10000';
+    if (estimatedBudget > 50000) budgetRange = '50000+';
+    else if (estimatedBudget > 20000) budgetRange = '20000-50000';
+    else if (estimatedBudget > 10000) budgetRange = '10000-20000';
+
+    const priceBreakdown = calculateDetailedPrice({
+      occasion: bookingData.occasionType as any,
+      budgetRange,
+      guestCount: bookingData.guestCount,
+      location: bookingData.location.city,
+      addons: bookingData.addons
+    });
+
+    // Override base price with actual theme price as done in frontend
+    const themeBasePrice = theme.basePrice * (bookingData.guestCount / 25);
+    const addonTotal = Object.values(priceBreakdown.addonPrices).reduce((sum, price) => sum + price, 0);
+    const locationSurchargeRate = priceBreakdown.locationSurcharge / priceBreakdown.basePrice || 0;
+    const locationSurcharge = themeBasePrice * locationSurchargeRate;
+    const subtotal = themeBasePrice + addonTotal + locationSurcharge;
+    const taxes = subtotal * 0.18;
     const totalAmount = Math.round(subtotal + taxes);
 
     // Create booking
@@ -129,12 +149,100 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Create Stripe Checkout Session
+    let checkoutSession;
+    try {
+      const { stripe } = await import('@/lib/stripe');
+      if (!stripe) {
+        console.error('Stripe configuration missing. STRIPE_SECRET_KEY might be unset or invalid.');
+        throw new Error('Stripe configuration missing');
+      }
+
+      // Get base URL for success/cancel redirects
+      const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+      console.log('Creating Stripe Checkout Session...');
+
+      // Prepare image URL
+      let validImages: string[] | undefined = undefined;
+      try {
+        const parsedImages = JSON.parse(theme.images);
+        if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+          const firstImage = parsedImages[0];
+          if (typeof firstImage === 'string') {
+            if (firstImage.startsWith('http')) {
+              validImages = [firstImage];
+            } else if (firstImage.startsWith('/')) {
+              // Convert relative URL to absolute
+              validImages = [`${origin}${firstImage}`];
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to parse theme images for Stripe:', e);
+      }
+
+      // Calculate Token/Deposit Amount
+      // Logic: 20% of total, min 500, max 2000 (replicating PaymentService.calculateTokenAmount)
+      const tokenPercentage = 0.2;
+      const minToken = 500;
+      const maxToken = 2000;
+      const calculatedToken = Math.round(totalAmount * tokenPercentage);
+      const tokenAmount = Math.max(minToken, Math.min(maxToken, calculatedToken));
+
+      checkoutSession = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'inr',
+              product_data: {
+                name: `${theme.name} Booking - Advance Token`,
+                description: `Deposit to confirm Event: ${bookingData.occasionType} on ${new Date(bookingData.date).toDateString()}. Total Amount: ₹${totalAmount}`,
+                images: validImages,
+              },
+              unit_amount: tokenAmount * 100, // Amount in paise
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${origin}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/booking?canceled=true`,
+        customer_email: bookingData.customerInfo.email,
+        metadata: {
+          bookingId: booking.id,
+          customerId: customer.id,
+          type: 'TOKEN_PAYMENT',
+          fullAmount: totalAmount.toString()
+        },
+      });
+      console.log('Stripe Session created:', checkoutSession.id);
+
+    } catch (stripeError) {
+      console.error('Stripe session creation failed:', stripeError);
+      // Return error to client to debug
+      return NextResponse.json({
+        success: false,
+        error: {
+          code: 'STRIPE_ERROR',
+          message: stripeError instanceof Error ? stripeError.message : 'Payment initialization failed',
+          details: stripeError
+        },
+        timestamp: new Date()
+      } as APIResponse<null>, { status: 500 });
+    }
+
     // TODO: Send confirmation email/WhatsApp message
     // TODO: Trigger notification to admin/decorators
 
     return NextResponse.json({
       success: true,
-      data: booking as unknown as Booking,
+      data: {
+        ...booking,
+        checkoutUrl: checkoutSession.url,
+        sessionId: checkoutSession.id
+      } as unknown as Booking,
       timestamp: new Date()
     } as APIResponse<Booking>, { status: 201 });
 
