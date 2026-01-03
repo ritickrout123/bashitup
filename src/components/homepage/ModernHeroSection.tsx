@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import logo from '../../../public/icons/logo.png';
@@ -25,6 +25,7 @@ export function ModernHeroSection({
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   // Handle scroll to change navbar appearance
   useEffect(() => {
@@ -41,10 +42,7 @@ export function ModernHeroSection({
     if (onBookingClick) {
       onBookingClick();
     } else {
-      const quickBookingElement = document.getElementById('quick-booking');
-      if (quickBookingElement) {
-        quickBookingElement.scrollIntoView({ behavior: 'smooth' });
-      }
+      router.push('/booking');
     }
   };
 
