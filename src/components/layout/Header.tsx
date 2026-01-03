@@ -33,17 +33,17 @@ export default function Header({ transparent = false, showBookingCTA = true, var
   const getNavLinkClasses = (path: string) => {
     const isActive = isActivePath(path);
     const baseClasses = `transition-colors font-medium relative`;
-    
+
     if (transparent) {
-      return `${baseClasses} ${isActive 
-        ? 'text-yellow-300 font-semibold' 
+      return `${baseClasses} ${isActive
+        ? 'text-yellow-300 font-semibold'
         : 'text-white drop-shadow-lg hover:text-yellow-300'
-      }`;
+        }`;
     } else {
-      return `${baseClasses} ${isActive 
-        ? 'text-purple-600 font-semibold' 
+      return `${baseClasses} ${isActive
+        ? 'text-purple-600 font-semibold'
         : 'text-gray-800 hover:text-purple-600'
-      }`;
+        }`;
     }
   };
 
@@ -51,17 +51,17 @@ export default function Header({ transparent = false, showBookingCTA = true, var
   const getMobileNavLinkClasses = (path: string) => {
     const isActive = isActivePath(path);
     const baseClasses = `block px-3 py-2 rounded-md text-base font-medium transition-colors`;
-    
+
     if (transparent) {
-      return `${baseClasses} ${isActive 
-        ? 'text-yellow-300 bg-white/20 font-semibold' 
+      return `${baseClasses} ${isActive
+        ? 'text-yellow-300 bg-white/20 font-semibold'
         : 'text-white drop-shadow-lg hover:bg-gray-100 hover:bg-opacity-20'
-      }`;
+        }`;
     } else {
-      return `${baseClasses} ${isActive 
-        ? 'text-purple-600 bg-purple-50 font-semibold' 
+      return `${baseClasses} ${isActive
+        ? 'text-purple-600 bg-purple-50 font-semibold'
         : 'text-gray-800 hover:bg-gray-100 hover:bg-opacity-20'
-      }`;
+        }`;
     }
   };
 
@@ -78,12 +78,12 @@ export default function Header({ transparent = false, showBookingCTA = true, var
               transition={{ duration: 0.6 }}
             >
               <Link href="/" className="text-white hover:opacity-80 transition-opacity">
-                <Image src={logo} alt="BashItNow Logo" className="w-auto h-16 lg:h-20 drop-shadow-lg" priority />
+                <Image src={logo} alt="BashItNow Logo" className="w-auto h-16 lg:h-20 drop-shadow-lg brightness-0 invert" priority />
               </Link>
             </motion.div>
 
             {/* Desktop Navigation */}
-            <motion.nav 
+            <motion.nav
               className="hidden lg:flex items-center space-x-8"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -107,7 +107,7 @@ export default function Header({ transparent = false, showBookingCTA = true, var
             </motion.nav>
 
             {/* User Menu & CTA */}
-            <motion.div 
+            <motion.div
               className="hidden lg:flex items-center space-x-4"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -185,7 +185,7 @@ export default function Header({ transparent = false, showBookingCTA = true, var
 
           {/* Mobile Navigation Menu */}
           {isMenuOpen && (
-            <motion.div 
+            <motion.div
               className="lg:hidden"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -315,7 +315,12 @@ export default function Header({ transparent = false, showBookingCTA = true, var
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link href="/" className={`text-2xl font-bold ${logoClasses} hover:opacity-80 transition-opacity`}>
-            <Image src={logo} alt="Logo" className="w-auto h-14 md:h-28" priority />
+            <Image
+              src={logo}
+              alt="Logo"
+              className={`w-auto h-10 md:h-16 ${transparent ? 'brightness-0 invert' : ''} transition-all duration-300`}
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}

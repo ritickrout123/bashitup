@@ -108,14 +108,14 @@ export function USPSection({
             >
               <motion.div
                 className="text-center p-6 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300"
-                whileHover={{ 
+                whileHover={{
                   y: -8,
                   scale: 1.02
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 {/* Icon with animation */}
-                <motion.div
+                {/* <motion.div
                   className="text-6xl mb-4 relative"
                   whileHover={{ 
                     rotate: [0, -10, 10, -10, 0],
@@ -124,8 +124,6 @@ export function USPSection({
                   transition={{ duration: 0.5 }}
                 >
                   {feature.icon}
-                  
-                  {/* Highlight badge */}
                   {feature.highlight && (
                     <motion.div
                       className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full font-semibold"
@@ -136,7 +134,7 @@ export function USPSection({
                       {feature.highlight}
                     </motion.div>
                   )}
-                </motion.div>
+                </motion.div> */}
 
                 {/* Title */}
                 <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-pink-600 transition-colors duration-300">

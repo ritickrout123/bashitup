@@ -136,7 +136,12 @@ export function ModernHeroSection({
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <Link href="/" className={`${logoClass} hover:opacity-80 transition-all duration-300`}>
-                <Image src={logo} alt="BashItNow Logo" className="w-auto h-12 lg:h-16" priority />
+                <Image
+                  src={logo}
+                  alt="BashItNow Logo"
+                  className={`w-auto h-12 lg:h-16 ${!isScrolled ? 'brightness-0 invert' : ''} transition-all duration-300`}
+                  priority
+                />
               </Link>
             </motion.div>
 
