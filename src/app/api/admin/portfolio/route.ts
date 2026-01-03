@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Admin portfolio fetch error:', error);
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch portfolio items' } },
+      { success: false, error: { code: 'INTERNAL_ERROR', message: `Failed to fetch portfolio items: ${error instanceof Error ? error.message : String(error)}` } },
       { status: 500 }
     );
   }
