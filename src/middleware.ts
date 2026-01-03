@@ -113,12 +113,16 @@ export async function middleware(request: NextRequest) {
     }
 
     // Add user info to request headers for API routes
-    const response = NextResponse.next();
-    response.headers.set('x-user-id', payload.userId);
-    response.headers.set('x-user-email', payload.email);
-    response.headers.set('x-user-role', payload.role);
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-user-id', payload.userId);
+    requestHeaders.set('x-user-email', payload.email);
+    requestHeaders.set('x-user-role', payload.role);
 
-    return response;
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   } catch (error) {
     console.error('Middleware auth error:', error);
 
