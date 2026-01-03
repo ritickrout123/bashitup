@@ -69,3 +69,70 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const userRole = request.headers.get('x-user-role');
+    if (userRole !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      themeId,
+      title,
+      description,
+      beforeImage,
+      afterImages,
+      videoUrl,
+      eventDate,
+      location,
+      isPublic
+    } = body;
+
+    // Validate required fields
+    if (!themeId || !title || !description || !beforeImage || !location || !eventDate) {
+      return NextResponse.json(
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Missing required fields' } },
+        { status: 400 }
+      );
+    }
+
+    const portfolioItem = await prisma.portfolioItem.create({
+      data: {
+        themeId,
+        title,
+        description,
+        beforeImage,
+        afterImages: Array.isArray(afterImages) ? JSON.stringify(afterImages) : JSON.stringify(afterImages || []),
+        videoUrl,
+        eventDate: new Date(eventDate),
+        location,
+        isPublic: isPublic || false,
+      },
+      include: {
+        theme: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: portfolioItem,
+    });
+  } catch (error) {
+    console.error('Admin portfolio creation error:', error);
+    return NextResponse.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to create portfolio item' } },
+      { status: 500 }
+    );
+  }
+}

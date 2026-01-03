@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout';
 import { useAuth, useIsAdmin } from '@/hooks/useAuth';
+import ThemeForm, { ThemeFormData } from '@/components/admin/themes/ThemeForm';
 
 interface Theme {
   id: string;
@@ -35,6 +36,8 @@ export default function AdminThemesPage() {
   const [filters, setFilters] = useState<ThemeFilters>({});
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
     if (isAdmin) {
@@ -46,14 +49,14 @@ export default function AdminThemesPage() {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
-      
+
       Object.entries(filters).forEach(([key, value]) => {
         if (value) queryParams.append(key, value);
       });
 
       const response = await fetch(`/api/admin/themes?${queryParams}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setThemes(data.data);
       }
@@ -75,11 +78,11 @@ export default function AdminThemesPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
-        setThemes(prev => 
-          prev.map(theme => 
-            theme.id === themeId 
+        setThemes(prev =>
+          prev.map(theme =>
+            theme.id === themeId
               ? { ...theme, isActive }
               : theme
           )
@@ -87,6 +90,57 @@ export default function AdminThemesPage() {
       }
     } catch (error) {
       console.error('Failed to update theme status:', error);
+    }
+  };
+
+  const handleCreateTheme = async (data: ThemeFormData) => {
+    try {
+      const response = await fetch('/api/admin/themes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowCreateForm(false);
+        fetchThemes();
+      } else {
+        alert(result.error?.message || 'Failed to create theme');
+      }
+    } catch (error) {
+      console.error('Failed to create theme:', error);
+      alert('Failed to create theme');
+    }
+  };
+
+  const handleUpdateTheme = async (data: ThemeFormData) => {
+    if (!editingTheme) return;
+
+    try {
+      const response = await fetch(`/api/admin/themes/${editingTheme.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowEditForm(false);
+        setEditingTheme(null);
+        fetchThemes();
+      } else {
+        alert(result.error?.message || 'Failed to update theme');
+      }
+    } catch (error) {
+      console.error('Failed to update theme:', error);
+      alert('Failed to update theme');
     }
   };
 
@@ -131,7 +185,11 @@ export default function AdminThemesPage() {
             </div>
             <div className="flex space-x-4">
               <button
-                onClick={() => setShowCreateForm(true)}
+                onClick={() => {
+                  setShowCreateForm(true);
+                  setShowEditForm(false);
+                  setEditingTheme(null);
+                }}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
               >
                 Add Theme
@@ -148,6 +206,20 @@ export default function AdminThemesPage() {
       </div>
 
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {(showCreateForm || showEditForm) && (
+          <div className="mb-8">
+            <ThemeForm
+              initialData={editingTheme}
+              onSubmit={showEditForm ? handleUpdateTheme : handleCreateTheme}
+              onCancel={() => {
+                setShowCreateForm(false);
+                setShowEditForm(false);
+                setEditingTheme(null);
+              }}
+            />
+          </div>
+        )}
+
         {/* Filters */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="p-6">
@@ -170,7 +242,7 @@ export default function AdminThemesPage() {
                   <option value="OTHER">Other</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Status
@@ -200,15 +272,15 @@ export default function AdminThemesPage() {
               </div>
             </div>
           </div>
-        </div> 
-       {/* Themes Grid */}
+        </div>
+        {/* Themes Grid */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">
               Themes ({themes.length})
             </h3>
           </div>
-          
+
           {loading ? (
             <div className="p-6 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -226,7 +298,7 @@ export default function AdminThemesPage() {
                   <div className="aspect-w-16 aspect-h-9 bg-gray-200">
                     {(() => {
                       try {
-                        const images = JSON.parse(theme.images);
+                        const images = typeof theme.images === 'string' ? JSON.parse(theme.images) : theme.images || [];
                         return images.length > 0 ? (
                           <img
                             src={images[0]}
@@ -247,26 +319,25 @@ export default function AdminThemesPage() {
                       }
                     })()}
                   </div>
-                  
+
                   {/* Theme Details */}
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="text-lg font-medium text-gray-900 truncate">
                         {theme.name}
                       </h4>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        theme.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${theme.isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                        }`}>
                         {theme.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
-                    
+
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                       {theme.description}
                     </p>
-                    
+
                     <div className="flex items-center justify-between mb-3">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCategoryColor(theme.category)}`}>
                         {theme.category.replace('_', ' ')}
@@ -280,26 +351,30 @@ export default function AdminThemesPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
                       <span>{theme._count.bookings} bookings</span>
                       <span>{theme._count.portfolioItems} portfolio items</span>
                     </div>
-                    
+
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => setSelectedTheme(theme)}
+                        onClick={() => {
+                          setEditingTheme(theme);
+                          setShowEditForm(true);
+                          setShowCreateForm(false);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                         className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100"
                       >
-                        View Details
+                        Edit
                       </button>
                       <button
                         onClick={() => updateThemeStatus(theme.id, !theme.isActive)}
-                        className={`px-3 py-2 text-sm font-medium rounded-md ${
-                          theme.isActive 
-                            ? 'text-red-600 bg-red-50 hover:bg-red-100' 
-                            : 'text-green-600 bg-green-50 hover:bg-green-100'
-                        }`}
+                        className={`px-3 py-2 text-sm font-medium rounded-md ${theme.isActive
+                          ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                          : 'text-green-600 bg-green-50 hover:bg-green-100'
+                          }`}
                       >
                         {theme.isActive ? 'Deactivate' : 'Activate'}
                       </button>
