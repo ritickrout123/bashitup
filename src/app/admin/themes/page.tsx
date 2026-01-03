@@ -9,7 +9,7 @@ interface Theme {
   id: string;
   name: string;
   description: string;
-  category: 'BIRTHDAY' | 'ANNIVERSARY' | 'BABY_SHOWER' | 'CORPORATE' | 'OTHER';
+  category: 'BIRTHDAY' | 'ANNIVERSARY' | 'BABY_SHOWER' | 'WEDDING_PROPOSAL';
   images: string[];
   videoUrl?: string;
   basePrice: number;
@@ -149,8 +149,7 @@ export default function AdminThemesPage() {
       case 'BIRTHDAY': return 'bg-pink-100 text-pink-800';
       case 'ANNIVERSARY': return 'bg-red-100 text-red-800';
       case 'BABY_SHOWER': return 'bg-blue-100 text-blue-800';
-      case 'CORPORATE': return 'bg-gray-100 text-gray-800';
-      case 'OTHER': return 'bg-purple-100 text-purple-800';
+      case 'WEDDING_PROPOSAL': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -238,8 +237,7 @@ export default function AdminThemesPage() {
                   <option value="BIRTHDAY">Birthday</option>
                   <option value="ANNIVERSARY">Anniversary</option>
                   <option value="BABY_SHOWER">Baby Shower</option>
-                  <option value="CORPORATE">Corporate</option>
-                  <option value="OTHER">Other</option>
+                  <option value="WEDDING_PROPOSAL">Wedding Proposal</option>
                 </select>
               </div>
 

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 export interface ThemeFormData {
     name: string;
     description: string;
-    category: 'BIRTHDAY' | 'ANNIVERSARY' | 'BABY_SHOWER' | 'CORPORATE' | 'OTHER';
+    category: 'BIRTHDAY' | 'ANNIVERSARY' | 'BABY_SHOWER' | 'WEDDING_PROPOSAL';
     images: string[];
     videoUrl?: string;
     basePrice: number;
@@ -98,8 +98,7 @@ export default function ThemeForm({ initialData, onSubmit, onCancel }: ThemeForm
                             <option value="BIRTHDAY">Birthday</option>
                             <option value="ANNIVERSARY">Anniversary</option>
                             <option value="BABY_SHOWER">Baby Shower</option>
-                            <option value="CORPORATE">Corporate</option>
-                            <option value="OTHER">Other</option>
+                            <option value="WEDDING_PROPOSAL">Wedding Proposal</option>
                         </select>
                     </div>
 

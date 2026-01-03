@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
 
     const where: any = {};
 
-    if (category) {
+    const validCategories = ['BIRTHDAY', 'ANNIVERSARY', 'BABY_SHOWER', 'WEDDING_PROPOSAL'];
+    if (category && validCategories.includes(category)) {
       where.category = category;
     }
 
