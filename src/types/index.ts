@@ -2,17 +2,18 @@
 // These types match the Prisma schema models
 
 export type UserRole = 'CUSTOMER' | 'ADMIN' | 'DECORATOR';
-export type EventCategory = 'BIRTHDAY' | 'ANNIVERSARY' | 'BABY_SHOWER' | 'WEDDING_PROPOSAL';
+export type EventCategory = 'BIRTHDAY' | 'ANNIVERSARY' | 'BABY_SHOWER' | 'WEDDING_PROPOSAL' | 'CORPORATE' | 'OTHER';
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 
 export interface User {
   id: string;
   email: string;
-  phone: string;
+  phone: string | null;
   name: string;
   role: UserRole;
-  password: string;
+  password: string | null;
+  googleId?: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -35,6 +36,16 @@ export interface TimeSlot {
   isAvailable: boolean;
 }
 
+export interface ThemePackage {
+  id: string;
+  themeId: string;
+  name: string;
+  description?: string;
+  price: number;
+  features: string[]; // List of inclusions
+  isPopular?: boolean;
+}
+
 export interface Theme {
   id: string;
   name: string;
@@ -42,8 +53,10 @@ export interface Theme {
   category: EventCategory;
   images: string[];
   videoUrl?: string;
-  basePrice: number;
+  basePrice: number; // Stays as fallback/starting price
   setupTime: number; // in minutes
+  cities?: string[]; // List of cities where this theme is available
+  packages?: ThemePackage[]; // Optional tiered pricing
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -63,9 +76,21 @@ export interface Booking {
   paymentStatus: PaymentStatus;
   decoratorId?: string;
   specialRequests?: string;
+  paymentIntentId?: string;
+  paidAmount?: number;
   location: Location; // JSON field in database
+  statusHistory?: {
+    status: BookingStatus;
+    timestamp: string;
+    note: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
+  // Relations
+  theme?: Theme;
+  customer?: User;
+  addons?: any[];
+  payments?: any[];
 }
 
 export interface PortfolioItem {

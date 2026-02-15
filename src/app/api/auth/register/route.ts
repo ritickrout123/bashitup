@@ -2,13 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth';
 import { UserRegistration, APIResponse, AuthResponse } from '@/types';
 import { ValidationError, DatabaseError } from '@/lib/errors';
+import { BrevoService } from '@/services/brevoService';
+import { EmailAutomationService } from '@/services/emailAutomationService';
+
+const brevoService = new BrevoService();
 
 export async function POST(request: NextRequest) {
   try {
     const body: UserRegistration = await request.json();
-    
+
     const authResponse = await AuthService.register(body);
-    
+
+    // Send Welcome Email via Automation Service
+    await EmailAutomationService.triggerEvent('USER_SIGNUP', body.email, {
+      user: { name: body.name }
+    });
+
     // Set HTTP-only cookies for tokens
     const response = NextResponse.json<APIResponse<AuthResponse>>({
       success: true,
@@ -17,10 +26,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Set secure cookies
-    const isProduction = process.env.NODE_ENV === 'production' || 
-                         process.env.NETLIFY === 'true' || 
-                         process.env.VERCEL === '1';
-    
+    const isProduction = process.env.NODE_ENV === 'production' ||
+      process.env.NETLIFY === 'true' ||
+      process.env.VERCEL === '1';
+
     response.cookies.set('accessToken', authResponse.accessToken, {
       httpOnly: true,
       secure: isProduction,
@@ -40,7 +49,7 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Registration API error:', error);
-    
+
     if (error instanceof ValidationError) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
@@ -51,7 +60,7 @@ export async function POST(request: NextRequest) {
         timestamp: new Date(),
       }, { status: 400 });
     }
-    
+
     if (error instanceof DatabaseError) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
@@ -62,7 +71,7 @@ export async function POST(request: NextRequest) {
         timestamp: new Date(),
       }, { status: 500 });
     }
-    
+
     return NextResponse.json<APIResponse<null>>({
       success: false,
       error: {

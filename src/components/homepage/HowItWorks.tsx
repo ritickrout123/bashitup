@@ -28,7 +28,7 @@ const defaultSteps: Step[] = [
     description: 'Select your celebration type and preferred date',
     icon: '🎉',
     details: [
-      'Pick from birthday, anniversary, baby shower, or corporate events',
+      'Pick from birthday, anniversary, baby shower',
       'Choose your preferred date and time slot',
       'Tell us about your guest count and venue'
     ]
@@ -164,23 +164,21 @@ export function HowItWorks({
               key={step.id}
               variants={stepVariants}
               onClick={() => setActiveStep(step.id)}
-              className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl transition-all duration-300 ${
-                activeStep === step.id
+              className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl transition-all duration-300 ${activeStep === step.id
                   ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-50 shadow-md hover:shadow-lg'
-              }`}
+                }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               {/* Step number */}
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                activeStep === step.id
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${activeStep === step.id
                   ? 'bg-white/20 text-white'
                   : 'bg-gray-100 text-gray-600 group-hover:bg-pink-100 group-hover:text-pink-600'
-              }`}>
+                }`}>
                 {step.number}
               </div>
-              
+
               {/* Step title */}
               <span className="font-semibold text-sm md:text-base">
                 {step.title}
@@ -263,11 +261,11 @@ export function HowItWorks({
                     >
                       <motion.div
                         className="text-8xl md:text-9xl opacity-80"
-                        animate={{ 
+                        animate={{
                           y: [0, -10, 0],
                           rotate: [0, 5, -5, 0]
                         }}
-                        transition={{ 
+                        transition={{
                           duration: 4,
                           repeat: Infinity,
                           ease: "easeInOut"
@@ -317,7 +315,7 @@ export function HowItWorks({
             >
               Book Now
             </motion.button>
-            
+
             <motion.a
               href="tel:+919876543210"
               className="px-8 py-4 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-full hover:border-pink-500 hover:text-pink-600 transition-all duration-300 shadow-md hover:shadow-lg"
@@ -327,10 +325,10 @@ export function HowItWorks({
               Call Support
             </motion.a>
           </div>
-          
+
           <p className="text-sm text-gray-500 mt-4">
-            🕐 <strong>60-minute setup guarantee</strong> • 
-            📞 <strong>24/7 support</strong> • 
+            🕐 <strong>60-minute setup guarantee</strong> •
+            📞 <strong>24/7 support</strong> •
             💯 <strong>100% satisfaction</strong>
           </p>
         </motion.div>
@@ -362,7 +360,7 @@ export function HowItWorks({
                   ×
                 </button>
               </div>
-              
+
               <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
                 {/* Placeholder for video - would be replaced with actual video component */}
                 <div className="text-center">

@@ -1,18 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { QuickBookingData, EventCategory } from '@/types';
 import { calculateEstimatedPrice, budgetRanges, isLocationServiceable } from '@/lib/pricing';
 import { validateQuickBooking } from '@/lib/validation';
+import { showErrorToast } from '@/lib/toast';
 
 interface QuickBookingWidgetProps {
   onSubmit?: (data: QuickBookingData) => void;
   loading?: boolean;
   className?: string;
 }
-
-
 
 const tricityCities = [
   'Chandigarh',
@@ -25,6 +25,7 @@ export function QuickBookingWidget({
   loading = false,
   className = ''
 }: QuickBookingWidgetProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState<QuickBookingData>({
     date: '',
     occasion: '',
@@ -32,9 +33,26 @@ export function QuickBookingWidget({
     budgetRange: ''
   });
 
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
   const [occasionTypes, setOccasionTypes] = useState<{ label: string; value: EventCategory }[]>([]);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Derived validation state
+  const validationResult = validateQuickBooking(formData);
+  const locationError = formData.location && !isLocationServiceable(formData.location)
+    ? 'We don\'t service this location yet. Please contact us for availability.'
+    : null;
+
+  const errors: { [key: string]: string } = {};
+  validationResult.errors.forEach(err => {
+    errors[err.field] = err.message;
+  });
+  if (locationError) {
+    errors.location = locationError;
+  }
+
+  const isValid = Object.keys(errors).length === 0;
 
   // Fetch categories
   useEffect(() => {
@@ -59,15 +77,10 @@ export function QuickBookingWidget({
   // Handle form field changes
   const handleChange = (field: keyof QuickBookingData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
+  const handleBlur = (field: keyof QuickBookingData) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
   };
 
   // Calculate estimated price based on selections
@@ -90,30 +103,19 @@ export function QuickBookingWidget({
     }
   }, [formData.occasion, formData.budgetRange, formData.location]);
 
-  // Validate form
-  const validateForm = (): boolean => {
-    const validation = validateQuickBooking(formData);
-
-    // Convert validation errors to error object
-    const newErrors: { [key: string]: string } = {};
-    validation.errors.forEach(error => {
-      newErrors[error.field] = error.message;
-    });
-
-    // Add location serviceability check
-    if (formData.location && !isLocationServiceable(formData.location)) {
-      newErrors.location = 'We don\'t service this location yet. Please contact us for availability.';
-    }
-
-    setErrors(newErrors);
-    return validation.isValid && Object.keys(newErrors).length === 0;
-  };
-
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (validateForm()) {
+    // Mark all fields as touched
+    setTouched({
+      date: true,
+      occasion: true,
+      location: true,
+      budgetRange: true
+    });
+
+    if (isValid) {
       // Track form submission
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'quick_booking_submit', {
@@ -127,18 +129,23 @@ export function QuickBookingWidget({
         onSubmit(formData);
       } else {
         // Default behavior - redirect to full booking page
+        setIsRedirecting(true);
         const params = new URLSearchParams({
           date: formData.date,
           occasion: formData.occasion,
           location: formData.location,
           budget: formData.budgetRange
         });
-        window.location.href = `/booking?${params.toString()}`;
+
+        // Small delay to show state change if needed, or instant push
+        router.push(`/booking?${params.toString()}`);
       }
+    } else {
+      showErrorToast("Please fill in all required fields correctly.");
     }
   };
 
-
+  const isLoading = loading || isRedirecting;
 
   return (
     <motion.section
@@ -179,12 +186,13 @@ export function QuickBookingWidget({
                   min={today}
                   value={formData.date}
                   onChange={(e) => handleChange('date', e.target.value)}
-                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.date
+                  onBlur={() => handleBlur('date')}
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${touched.date && errors.date
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 focus:border-pink-500'
                     }`}
                 />
-                {errors.date && (
+                {touched.date && errors.date && (
                   <motion.p
                     className="mt-1 text-sm text-red-600"
                     initial={{ opacity: 0 }}
@@ -207,7 +215,8 @@ export function QuickBookingWidget({
                 <select
                   value={formData.occasion}
                   onChange={(e) => handleChange('occasion', e.target.value)}
-                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.occasion
+                  onBlur={() => handleBlur('occasion')}
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${touched.occasion && errors.occasion
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 focus:border-pink-500'
                     }`}
@@ -219,7 +228,7 @@ export function QuickBookingWidget({
                     </option>
                   ))}
                 </select>
-                {errors.occasion && (
+                {touched.occasion && errors.occasion && (
                   <motion.p
                     className="mt-1 text-sm text-red-600"
                     initial={{ opacity: 0 }}
@@ -243,7 +252,8 @@ export function QuickBookingWidget({
                 <select
                   value={formData.location}
                   onChange={(e) => handleChange('location', e.target.value)}
-                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.location
+                  onBlur={() => handleBlur('location')}
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${touched.location && errors.location
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 focus:border-pink-500'
                     }`}
@@ -256,7 +266,7 @@ export function QuickBookingWidget({
                   ))}
                 </select>
 
-                {errors.location && (
+                {touched.location && errors.location && (
                   <motion.p
                     className="mt-1 text-sm text-red-600"
                     initial={{ opacity: 0 }}
@@ -279,7 +289,8 @@ export function QuickBookingWidget({
                 <select
                   value={formData.budgetRange}
                   onChange={(e) => handleChange('budgetRange', e.target.value)}
-                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${errors.budgetRange
+                  onBlur={() => handleBlur('budgetRange')}
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 ${touched.budgetRange && errors.budgetRange
                     ? 'border-red-300 bg-red-50'
                     : 'border-gray-300 focus:border-pink-500'
                     }`}
@@ -291,7 +302,7 @@ export function QuickBookingWidget({
                     </option>
                   ))}
                 </select>
-                {errors.budgetRange && (
+                {touched.budgetRange && errors.budgetRange && (
                   <motion.p
                     className="mt-1 text-sm text-red-600"
                     initial={{ opacity: 0 }}
@@ -330,13 +341,17 @@ export function QuickBookingWidget({
             >
               <motion.button
                 type="submit"
-                disabled={loading}
-                className="group relative inline-flex items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-purple-600 px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                disabled={isLoading}
+                className={`group relative inline-flex items-center justify-center rounded-full px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 
+                    ${isValid
+                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 hover:shadow-xl hover:scale-105'
+                    : 'bg-gray-400 cursor-not-allowed opacity-75'
+                  }`}
+                whileHover={isValid ? { scale: 1.05 } : {}}
+                whileTap={isValid ? { scale: 0.95 } : {}}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                {loading ? (
+                {isLoading ? (
                   <>
                     <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
                       <circle

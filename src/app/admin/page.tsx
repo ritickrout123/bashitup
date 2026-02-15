@@ -210,6 +210,41 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* Email Marketing & Automation */}
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <span className="text-2xl mr-2">📧</span>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Email System
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Manage campaigns and automated system emails
+                </p>
+                <div className="space-y-3">
+                  <a
+                    href="/admin/email"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200"
+                  >
+                    Send Campaign
+                  </a>
+                  <a
+                    href="/admin/email-events"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200"
+                  >
+                    Automation Triggers
+                  </a>
+                  <a
+                    href="/admin/email-templates"
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200"
+                  >
+                    Email Templates
+                  </a>
+                </div>
+              </div>
+            </div>
+
             {/* System Settings */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-6">

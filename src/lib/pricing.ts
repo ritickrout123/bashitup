@@ -6,6 +6,7 @@ interface PriceCalculationParams {
   guestCount?: number;
   location?: string;
   addons?: string[];
+  addonRates?: Record<string, number>;
 }
 
 interface BudgetRangeConfig {
@@ -27,6 +28,7 @@ const occasionMultipliers: Record<EventCategory, number> = {
   BIRTHDAY: 1.0,
   ANNIVERSARY: 1.2,
   BABY_SHOWER: 1.1,
+  WEDDING_PROPOSAL: 1.3,
   CORPORATE: 1.5,
   OTHER: 1.0
 };
@@ -71,6 +73,23 @@ export function calculateEstimatedPrice(params: PriceCalculationParams): number 
   return Math.round(basePrice);
 }
 
+// Setup time constants (in minutes)
+const ADDON_SETUP_TIMES: Record<string, number> = {
+  'addon-001': 0,   // Photography - No setup
+  'addon-002': 10,  // Cake Cutting
+  'addon-003': 30,  // DJ
+  'addon-004': 20,  // Lighting
+  'addon-005': 25,  // Flowers
+  'addon-006': 30,  // Balloon Arch
+  'addon-007': 15,  // Photo Booth
+  'addon-008': 5    // Welcome Banner
+};
+
+export function calculateSetupTime(baseSetupTime: number, addonIds: string[]): number {
+  const addonsTime = addonIds.reduce((total, id) => total + (ADDON_SETUP_TIMES[id] || 0), 0);
+  return baseSetupTime + addonsTime;
+}
+
 export function calculateDetailedPrice(params: PriceCalculationParams): PriceBreakdown {
   const { occasion, budgetRange, guestCount = 25, location = '', addons = [] } = params;
 
@@ -92,7 +111,8 @@ export function calculateDetailedPrice(params: PriceCalculationParams): PriceBre
 
   // Calculate multipliers
   const occasionMultiplier = occasionMultipliers[occasion] || 1.0;
-  const guestMultiplier = getGuestCountMultiplier(guestCount);
+  // Guest count multiplier removed for pricing, set to 1.0
+  const guestMultiplier = 1.0;
   const locationSurchargeRate = locationSurcharges[location] || 0;
 
   // Calculate adjusted base price
@@ -101,14 +121,16 @@ export function calculateDetailedPrice(params: PriceCalculationParams): PriceBre
   // Calculate location surcharge amount
   const locationSurchargeAmount = adjustedBasePrice * locationSurchargeRate;
 
-  // Calculate addon prices (placeholder - would be fetched from database)
-  const addonPrices: { [addonId: string]: number } = {};
+  // Calculate addon prices
+  const addonPricesResult: { [addonId: string]: number } = {};
   let totalAddonPrice = 0;
 
+  const addonRates = (params as any).addonRates as Record<string, number> | undefined;
+
   addons.forEach(addonId => {
-    // Placeholder addon pricing logic
-    const addonPrice = 1000; // This would be fetched from database
-    addonPrices[addonId] = addonPrice;
+    // Use provided rate or fallback to default 1000
+    const addonPrice = addonRates ? (addonRates[addonId] || 0) : 1000;
+    addonPricesResult[addonId] = addonPrice;
     totalAddonPrice += addonPrice;
   });
 
@@ -123,7 +145,7 @@ export function calculateDetailedPrice(params: PriceCalculationParams): PriceBre
 
   return {
     basePrice: adjustedBasePrice,
-    addonPrices,
+    addonPrices: addonPricesResult,
     locationSurcharge: locationSurchargeAmount,
     guestCountMultiplier: guestMultiplier,
     totalPrice: subtotal,
@@ -150,4 +172,23 @@ export function isLocationServiceable(location: string): boolean {
 
 export function getLocationSurchargeRate(location: string): number {
   return locationSurcharges[location] || 0;
+}
+
+// Serviceable Tri-City Pincodes (Chandigarh, Mohali, Panchkula, Zirakpur, Kharar)
+const SERVICEABLE_PINCODES = [
+  // Chandigarh (1600xx)
+  /^1600\d{2}$/,
+  // Mohali & Zirakpur (140xxx)
+  /^140301$/, /^140306$/, /^140307$/, /^140308$/, // Mohali
+  /^140603$/, /^140604$/, // Zirakpur
+  /^140501$/, // Kharar
+  // Panchkula (134xxx)
+  /^13410[89]$/, /^13411[23467]$/
+];
+
+export function isPincodeServiceable(pincode: string): boolean {
+  if (!pincode || pincode.length < 6) return true; // Don't warn on incomplete input
+
+  // Check against allowed patterns
+  return SERVICEABLE_PINCODES.some(pattern => pattern.test(pincode));
 }

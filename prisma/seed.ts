@@ -76,7 +76,7 @@ async function main() {
     const existingAddon = await prisma.addon.findFirst({
       where: { name: addon.name },
     });
-    
+
     if (!existingAddon) {
       await prisma.addon.create({
         data: addon,
@@ -137,18 +137,6 @@ async function main() {
       setupTime: 40,
     },
     {
-      name: 'Corporate Elegance',
-      description: 'Professional and sophisticated setup for corporate events',
-      category: 'CORPORATE' as const,
-      images: JSON.stringify([
-        '/images/themes/corporate-1.jpg',
-        '/images/themes/corporate-2.jpg',
-        '/images/themes/corporate-3.jpg',
-      ]),
-      basePrice: 20000,
-      setupTime: 90,
-    },
-    {
       name: 'Neon Night',
       description: 'Electric neon theme for modern party vibes',
       category: 'BIRTHDAY' as const,
@@ -167,7 +155,7 @@ async function main() {
     const existingTheme = await prisma.theme.findFirst({
       where: { name: theme.name },
     });
-    
+
     if (existingTheme) {
       createdThemes.push(existingTheme);
     } else {
@@ -226,7 +214,7 @@ async function main() {
     const existingItem = await prisma.portfolioItem.findFirst({
       where: { title: item.title },
     });
-    
+
     if (!existingItem) {
       await prisma.portfolioItem.create({
         data: item,
@@ -280,7 +268,7 @@ async function main() {
     const existingCustomer = await prisma.user.findUnique({
       where: { email: customer.email },
     });
-    
+
     if (existingCustomer) {
       createdCustomers.push(existingCustomer);
     } else {
@@ -366,36 +354,18 @@ async function main() {
         pincode: '700016',
         coordinates: { lat: 22.5726, lng: 88.3639 }
       },
-    },
-    {
-      customerId: createdCustomers[4].id,
-      occasionType: 'Corporate Event',
-      themeId: createdThemes[4].id, // Corporate Elegance
-      date: new Date('2024-04-10'),
-      startTime: '18:00',
-      endTime: '22:00',
-      guestCount: 100,
-      totalAmount: 35000,
-      status: 'COMPLETED' as const,
-      paymentStatus: 'PAID' as const,
-      location: {
-        address: '555 IT Park',
-        city: 'Hyderabad',
-        pincode: '500081',
-        coordinates: { lat: 17.3850, lng: 78.4867 }
-      },
-    },
+    }
   ];
 
   const createdBookings = [];
   for (const booking of sampleBookings) {
     const existingBooking = await prisma.booking.findFirst({
-      where: { 
+      where: {
         customerId: booking.customerId,
-        date: booking.date 
+        date: booking.date
       },
     });
-    
+
     if (!existingBooking) {
       const createdBooking = await prisma.booking.create({
         data: booking,
@@ -456,25 +426,14 @@ async function main() {
         '/images/testimonials/anniversary-1-setup.jpg'
       ]),
       isPublic: true,
-    },
-    {
-      customerId: createdCustomers[4].id,
-      bookingId: createdBookings[4].id,
-      rating: 5,
-      comment: 'Outstanding professional service for our corporate event. The elegant setup impressed all our clients and colleagues. The team was discreet, efficient, and delivered exactly what was promised. Excellent work!',
-      images: JSON.stringify([
-        '/images/testimonials/corporate-1-elegant.jpg',
-        '/images/testimonials/corporate-1-professional.jpg'
-      ]),
-      isPublic: true,
-    },
+    }
   ];
 
   for (const testimonial of testimonials) {
     const existingTestimonial = await prisma.testimonial.findUnique({
       where: { bookingId: testimonial.bookingId },
     });
-    
+
     if (!existingTestimonial) {
       await prisma.testimonial.create({
         data: testimonial,

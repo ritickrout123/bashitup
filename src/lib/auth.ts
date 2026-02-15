@@ -1,18 +1,18 @@
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
-import { 
-  LoginCredentials, 
-  UserRegistration, 
-  AuthResponse, 
-  JWTPayload, 
+import {
+  LoginCredentials,
+  UserRegistration,
+  AuthResponse,
+  JWTPayload,
   User,
-  UserRole 
+  UserRole
 } from '@/types';
-import { 
-  ValidationError, 
+import {
+  ValidationError,
   AuthenticationError,
-  DatabaseError 
+  DatabaseError
 } from './errors';
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -31,7 +31,7 @@ export class AuthService {
   static async generateAccessToken(payload: JWTPayload): Promise<string> {
     const secret = new TextEncoder().encode(JWT_SECRET as string);
     const expirationTime = JWT_EXPIRES_IN === '7d' ? '7d' : JWT_EXPIRES_IN;
-    
+
     return await new SignJWT({
       userId: payload.userId,
       email: payload.email,
@@ -49,7 +49,7 @@ export class AuthService {
   static async generateRefreshToken(payload: JWTPayload): Promise<string> {
     const secret = new TextEncoder().encode(JWT_REFRESH_SECRET as string);
     const expirationTime = JWT_REFRESH_EXPIRES_IN === '30d' ? '30d' : JWT_REFRESH_EXPIRES_IN;
-    
+
     return await new SignJWT({
       userId: payload.userId,
       email: payload.email,
@@ -100,6 +100,18 @@ export class AuthService {
   }
 
   /**
+   * Verify token (alias for verifyAccessToken for backward compatibility/simplicity)
+   */
+  static async verifyToken(token: string): Promise<User | null> {
+    try {
+      const payload = await this.verifyAccessToken(token);
+      return await this.getUserById(payload.userId) as User | null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Hash password using bcrypt
    */
   static async hashPassword(password: string): Promise<string> {
@@ -135,23 +147,23 @@ export class AuthService {
    */
   static validatePassword(password: string): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     if (password.length < 8) {
       errors.push('Password must be at least 8 characters long');
     }
-    
+
     if (!/[A-Z]/.test(password)) {
       errors.push('Password must contain at least one uppercase letter');
     }
-    
+
     if (!/[a-z]/.test(password)) {
       errors.push('Password must contain at least one lowercase letter');
     }
-    
+
     if (!/\d/.test(password)) {
       errors.push('Password must contain at least one number');
     }
-    
+
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
       errors.push('Password must contain at least one special character');
     }
@@ -284,6 +296,10 @@ export class AuthService {
       }
 
       // Verify password
+      if (!user.password) {
+        throw new AuthenticationError('Invalid email or password');
+      }
+
       const isPasswordValid = await this.comparePassword(password, user.password);
       if (!isPasswordValid) {
         throw new AuthenticationError('Invalid email or password');
@@ -393,7 +409,7 @@ export class AuthService {
         }
       });
 
-      return user;
+      return user as unknown as Omit<User, 'password'> | null;
     } catch (error) {
       console.error('Get user error:', error);
       return null;

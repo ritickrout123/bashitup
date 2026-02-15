@@ -39,18 +39,61 @@ export async function POST(request: NextRequest) {
       } as APIResponse<null>, { status: 404 });
     }
 
-    // Check for existing bookings at the same date/time/location
-    const existingBooking = await prisma.booking.findFirst({
+    // Check for existing bookings with time overlap at the same location
+    // We check for any booking where:
+    // (StartA < EndB) and (EndA > StartB)
+    const conflictingBooking = await prisma.booking.findFirst({
       where: {
         date: bookingData.date,
-        startTime: bookingData.timeSlot.startTime,
         status: {
           in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS']
-        }
+        },
+        // Location check: City or Pincode match
+        location: {
+          path: ['city'],
+          string_contains: bookingData.location.city
+        },
+        // Time overlap check
+        // Note: Prisma filtering on string times is tricky, so we might need to fetch and filter in JS 
+        // if we stick to string times. However, since we standardize slots, we can check basic overlap
+        // assuming standard format.
+        // A better approach for the API is to rely on the shared availability logic or fetch potential conflicts.
       }
     });
 
-    if (existingBooking) {
+    // Fetch all bookings for the day to check overlap in memory (safer for string times)
+    const dayBookings = await prisma.booking.findMany({
+      where: {
+        date: bookingData.date,
+        status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] }
+      }
+    });
+
+    const hasConflict = dayBookings.some(booking => {
+      // 1. Check Location Overlap
+      const bookingLoc = booking.location as any;
+      const sameLocation =
+        bookingLoc?.city?.toLowerCase() === bookingData.location.city.toLowerCase() ||
+        bookingLoc?.pincode === bookingData.location.pincode;
+
+      if (!sameLocation) return false;
+
+      // 2. Check Time Overlap
+      // Convert to comparable values (minutes from midnight)
+      const getMinutes = (time: string) => {
+        const [h, m] = time.split(':').map(Number);
+        return h * 60 + m;
+      };
+
+      const reqStart = getMinutes(bookingData.timeSlot.startTime);
+      const reqEnd = getMinutes(bookingData.timeSlot.endTime);
+      const bookStart = getMinutes(booking.startTime);
+      const bookEnd = getMinutes(booking.endTime);
+
+      return reqStart < bookEnd && reqEnd > bookStart;
+    });
+
+    if (hasConflict) {
       // DEV MODE: Bypass availability check if enabled
       if (process.env.NEXT_PUBLIC_ENABLE_ALL_SLOTS !== 'true') {
         return NextResponse.json({
@@ -130,7 +173,14 @@ export async function POST(request: NextRequest) {
         totalAmount,
         location: JSON.parse(JSON.stringify(bookingData.location)), // JSON field
         status: 'PENDING',
-        paymentStatus: 'PENDING'
+        paymentStatus: 'PENDING',
+        statusHistory: [
+          {
+            status: 'PENDING',
+            timestamp: new Date().toISOString(),
+            note: 'Booking created'
+          }
+        ]
       },
       include: {
         customer: {

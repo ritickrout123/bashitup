@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -34,14 +35,29 @@ model Theme {
   videoUrl       String?
   basePrice      Float
   setupTime      Int
+  cities         String[]        @default([]) // Empty = Available everywhere
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   bookings       Booking[]
   portfolioItems PortfolioItem[]
   themeAddons    ThemeAddon[]
+  packages       ThemePackage[]
 
   @@map("themes")
+}
+
+model ThemePackage {
+  id          String   @id @default(cuid())
+  themeId     String
+  name        String
+  description String?
+  price       Float
+  features    String[]
+  isPopular   Boolean  @default(false)
+  theme       Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@map("theme_packages")
 }
 
 model PortfolioItem {
@@ -85,6 +101,7 @@ model Booking {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   location          Json
+  statusHistory     Json?          // Stores array of { status, timestamp, note }
   addons            BookingAddon[]
   customer          User           @relation(fields: [customerId], references: [id])
   decorator         User?          @relation("DecoratorBookings", fields: [decoratorId], references: [id])
@@ -205,4 +222,34 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+model EmailTemplate {
+  id          String       @id @default(cuid())
+  name        String
+  subject     String
+  body        String       // HTML content
+  type        String       @default("TRANSACTIONAL") // TRANSACTIONAL, MARKETING
+  variables   String[]     // List of supported variables e.g. ["user.name", "booking.id"]
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  emailEvents EmailEvent[]
+
+  @@map("email_templates")
+}
+
+model EmailEvent {
+  id            String         @id @default(cuid())
+  eventKey      String         @unique // e.g., USER_SIGNUP
+  description   String
+  isActive      Boolean        @default(true)
+  delay         Int            @default(0) // In minutes, 0 = immediate
+  recipientType String         @default("USER") // USER, ADMIN, BOTH
+  templateId    String?
+  template      EmailTemplate? @relation(fields: [templateId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("email_events")
 }

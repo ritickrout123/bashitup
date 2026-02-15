@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Layout } from '@/components/layout';
+import { BookingHistoryCard } from '@/components/dashboard/BookingHistoryCard';
 
 export default function DashboardPage() {
   const { user, logout, isLoading } = useAuth();
@@ -81,10 +82,10 @@ export default function DashboardPage() {
                     <dt className="text-sm font-medium text-gray-500">Role</dt>
                     <dd className="text-sm text-gray-900">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'ADMIN'
-                          ? 'bg-red-100 text-red-800'
-                          : user.role === 'DECORATOR'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-blue-100 text-blue-800'
+                        ? 'bg-red-100 text-red-800'
+                        : user.role === 'DECORATOR'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-blue-100 text-blue-800'
                         }`}>
                         {user.role}
                       </span>
@@ -159,6 +160,11 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Booking History Section */}
+            <div className="md:col-span-2 lg:col-span-3">
+              <BookingHistoryCard userId={user.id} />
+            </div>
           </div>
         </div>
       </div>

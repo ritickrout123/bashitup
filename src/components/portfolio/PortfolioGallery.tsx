@@ -73,12 +73,11 @@ const categoryLabels: Record<EventCategory, string> = {
   BIRTHDAY: 'Birthdays',
   ANNIVERSARY: 'Anniversaries',
   BABY_SHOWER: 'Baby Showers',
-  CORPORATE: 'Corporate Events',
   OTHER: 'Other Events'
 };
 
 export function PortfolioGallery({
-  categories = ['BIRTHDAY', 'ANNIVERSARY', 'BABY_SHOWER', 'CORPORATE'],
+  categories = ['BIRTHDAY', 'ANNIVERSARY', 'BABY_SHOWER'],
   items = mockPortfolioItems,
   onThemeSelect,
   title = "Our Portfolio",
@@ -88,24 +87,24 @@ export function PortfolioGallery({
   const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
 
   // Filter items by category
-  const filteredItems = activeCategory === 'ALL' 
-    ? items 
+  const filteredItems = activeCategory === 'ALL'
+    ? items
     : items.filter(item => {
-        // For now, we'll categorize based on title keywords
-        const title = item.title.toLowerCase();
-        switch (activeCategory) {
-          case 'BIRTHDAY':
-            return title.includes('birthday');
-          case 'ANNIVERSARY':
-            return title.includes('anniversary');
-          case 'BABY_SHOWER':
-            return title.includes('baby') || title.includes('shower');
-          case 'CORPORATE':
-            return title.includes('corporate') || title.includes('office');
-          default:
-            return true;
-        }
-      });
+      // For now, we'll categorize based on title keywords
+      const title = item.title.toLowerCase();
+      switch (activeCategory) {
+        case 'BIRTHDAY':
+          return title.includes('birthday');
+        case 'ANNIVERSARY':
+          return title.includes('anniversary');
+        case 'BABY_SHOWER':
+          return title.includes('baby') || title.includes('shower');
+        case 'CORPORATE':
+          return title.includes('corporate') || title.includes('office');
+        default:
+          return true;
+      }
+    });
 
   const handleThemeSelect = (themeId: string) => {
     if (onThemeSelect) {
@@ -166,11 +165,10 @@ export function PortfolioGallery({
         >
           <button
             onClick={() => setActiveCategory('ALL')}
-            className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-              activeCategory === 'ALL'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${activeCategory === 'ALL'
+              ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             All Categories
           </button>
@@ -178,11 +176,10 @@ export function PortfolioGallery({
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
-              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                activeCategory === category
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${activeCategory === category
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               {categoryLabels[category]}
             </button>
@@ -269,7 +266,7 @@ function PortfolioCard({ item, onSelect, onThemeSelect }: PortfolioCardProps) {
           afterImage={item.afterImages[0]}
           alt={item.title}
         />
-        
+
         {/* Play button for video */}
         {item.videoUrl && (
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
@@ -334,7 +331,7 @@ function BeforeAfterSlider({ beforeImage, afterImage, alt }: BeforeAfterSliderPr
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = (x / rect.width) * 100;
@@ -355,7 +352,7 @@ function BeforeAfterSlider({ beforeImage, afterImage, alt }: BeforeAfterSliderPr
         alt={`${alt} - After`}
         className="absolute inset-0 w-full h-full object-cover"
       />
-      
+
       {/* Before image (overlay) */}
       <div
         className="absolute inset-0 overflow-hidden"

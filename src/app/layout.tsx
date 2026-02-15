@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "BashItNow - Event Décor at Your Doorstep in Few Minutes!",
-  description: "We set the BASH, in a FLASH — Professional event decoration services delivered to your doorstep in just Few Minutes. Book now for birthdays, anniversaries, corporate events, and more!",
-  keywords: "event decoration, party planning, birthday decoration, anniversary setup, corporate events, quick decoration service",
+  description: "We set the BASH, in a FLASH — Professional event decoration services delivered to your doorstep in just Few Minutes. Book now for birthdays, anniversaries, and more!",
+  keywords: "event decoration, party planning, birthday decoration, anniversary setup, , quick decoration service",
   authors: [{ name: "BashItNow Team" }],
   creator: "BashItNow",
   publisher: "BashItNow",

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { EventCategory, Theme, Location, PriceBreakdown } from '@/types';
-import { calculateDetailedPrice, formatPrice, getLocationSurchargeRate } from '@/lib/pricing';
+import { calculateDetailedPrice, formatPrice, getLocationSurchargeRate, calculateSetupTime } from '@/lib/pricing';
 
 interface PriceCalculatorProps {
   occasionType: EventCategory;
@@ -27,6 +27,10 @@ const availableAddons = [
   { id: 'addon-008', name: 'Welcome Banner', price: 600, category: 'Signage' }
 ];
 
+import { AddonService } from '@/services/addonService';
+
+// ... (keep existing imports)
+
 export function PriceCalculator({
   occasionType,
   selectedTheme,
@@ -39,6 +43,16 @@ export function PriceCalculator({
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdown | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<string[]>(addons);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [dynamicAddons, setDynamicAddons] = useState<any[]>([]);
+
+  // Fetch addons on mount
+  useEffect(() => {
+    const fetchAddons = async () => {
+      const fetchedAddons = await AddonService.getAddons();
+      setDynamicAddons(fetchedAddons);
+    };
+    fetchAddons();
+  }, []);
 
   const calculatePrice = useCallback(async () => {
     if (!selectedTheme) return;
@@ -57,20 +71,28 @@ export function PriceCalculator({
       else if (estimatedBudget > 20000) budgetRange = '20000-50000';
       else if (estimatedBudget > 10000) budgetRange = '10000-20000';
 
+      // Create a map of addon prices from dynamicAddons
+      const addonRates: Record<string, number> = {};
+      dynamicAddons.forEach(addon => {
+        addonRates[addon.id] = addon.price;
+      });
+
       const breakdown = calculateDetailedPrice({
         occasion: occasionType,
         budgetRange,
         guestCount,
         location: location.city,
-        addons: selectedAddons
+        addons: selectedAddons,
+        addonRates // Pass the dynamic rates
       });
 
       // Add theme-specific pricing
       const themeAdjustedBreakdown: PriceBreakdown = {
         ...breakdown,
-        basePrice: selectedTheme.basePrice * (guestCount / 25),
+        basePrice: selectedTheme.basePrice * 1.0, // Guest Count Multiplier removed
         addonPrices: selectedAddons.reduce((acc, addonId) => {
-          const addon = availableAddons.find(a => a.id === addonId);
+          // Use dynamic addon data if available, or fallback to mock
+          const addon = dynamicAddons.find(a => a.id === addonId) || availableAddons.find(a => a.id === addonId);
           if (addon) {
             acc[addonId] = addon.price;
           }
@@ -101,7 +123,7 @@ export function PriceCalculator({
     } finally {
       setIsCalculating(false);
     }
-  }, [selectedTheme, occasionType, guestCount, location.city, selectedAddons, onPriceChange]);
+  }, [selectedTheme, occasionType, guestCount, location.city, selectedAddons, onPriceChange, dynamicAddons]);
 
   // Calculate price when inputs change
   useEffect(() => {
@@ -158,45 +180,61 @@ export function PriceCalculator({
               {formatPrice(priceBreakdown.finalAmount)}
             </div>
             <p className="text-sm text-gray-600">
-              Total price including taxes • {getGuestCountCategory(guestCount)}
+              Total price including taxes
             </p>
           </motion.div>
         )}
       </div>
 
       {/* Add-ons Selection */}
-      {/* <div>
-        <h4 className="text-lg font-semibold text-gray-800 mb-4">
-          Enhance Your Event (Optional)
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-between">
+          <span>Enhance Your Event (Optional)</span>
+          {priceBreakdown && (
+            <span className={`text-xs px-2 py-1 rounded-full ${calculateSetupTime(selectedTheme.setupTime, selectedAddons) > 180
+              ? 'bg-yellow-100 text-yellow-800'
+              : 'bg-blue-50 text-blue-700'
+              }`}>
+              ⏱️ Est. Setup: {Math.floor(calculateSetupTime(selectedTheme.setupTime, selectedAddons) / 60)}h {calculateSetupTime(selectedTheme.setupTime, selectedAddons) % 60}m
+            </span>
+          )}
         </h4>
+
+        {calculateSetupTime(selectedTheme.setupTime, selectedAddons) > 180 && (
+          <div className="mb-4 text-xs bg-yellow-50 text-yellow-800 p-2 rounded border border-yellow-200">
+            ⚠️ Complex setup. Might require expert confirmation.
+          </div>
+        )}
+
         <div className="grid gap-3 md:grid-cols-2">
-          {availableAddons.map((addon) => (
+          {(dynamicAddons.length > 0 ? dynamicAddons : availableAddons).map((addon) => (
             <motion.div
               key={addon.id}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 ${
-                selectedAddons.includes(addon.id)
-                  ? 'border-pink-500 bg-pink-50'
-                  : 'border-gray-200 hover:border-pink-300'
-              }`}
+              className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 relative overflow-hidden group ${selectedAddons.includes(addon.id)
+                ? 'border-pink-500 bg-pink-50'
+                : 'border-gray-200 hover:border-pink-300 hover:shadow-md'
+                }`}
               onClick={() => handleAddonToggle(addon.id)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between relative z-10">
                 <div className="flex-1">
                   <div className="flex items-center mb-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedAddons.includes(addon.id)}
-                      onChange={() => handleAddonToggle(addon.id)}
-                      className="mr-3 h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-                    />
+                    <div className={`w-5 h-5 rounded border mr-3 flex items-center justify-center transition-colors ${selectedAddons.includes(addon.id) ? 'bg-pink-500 border-pink-500' : 'border-gray-300 bg-white'
+                      }`}>
+                      {selectedAddons.includes(addon.id) && (
+                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
                     <h5 className="font-semibold text-gray-800">{addon.name}</h5>
                   </div>
-                  <p className="text-sm text-gray-600 ml-7">{addon.category}</p>
+                  <p className="text-xs text-gray-500 ml-8">{addon.category}</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold text-pink-600">
+                  <div className="font-bold text-pink-600">
                     {formatPrice(addon.price)}
                   </div>
                 </div>
@@ -204,7 +242,7 @@ export function PriceCalculator({
             </motion.div>
           ))}
         </div>
-      </div> */}
+      </div>
 
       {/* Detailed Price Breakdown */}
       {priceBreakdown && (
@@ -223,7 +261,7 @@ export function PriceCalculator({
               <div>
                 <span className="text-gray-700">Base Theme Price</span>
                 <div className="text-sm text-gray-500">
-                  {selectedTheme.name} • {guestCount} guests
+                  {selectedTheme.name}
                 </div>
               </div>
               <span className="font-semibold">

@@ -259,7 +259,7 @@ export function AvailabilityChecker({
       {/* Emergency Booking Notice */}
       {selectedDate && (
         <motion.div
-          className="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
+          className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sticky bottom-4 shadow-lg md:static md:shadow-none z-10 mx-4 md:mx-0"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
