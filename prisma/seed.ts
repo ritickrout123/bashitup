@@ -469,6 +469,85 @@ async function main() {
 
   console.log('✅ System configuration created');
 
+  // Create Email Templates
+  const emailTemplates = [
+    {
+      name: 'Welcome Email',
+      subject: 'Welcome to BashItNow! 🎉',
+      body: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #db2777;">Welcome to BashItNow, {{user.name}}!</h1>
+          <p>We are thrilled to have you on board. Get ready to plan the most amazing events of your life!</p>
+          <p>Explore our themes and start booking your next celebration.</p>
+          <br/>
+          <a href="{{app.url}}/dashboard" style="background-color: #db2777; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
+        </div>
+      `,
+      type: 'TRANSACTIONAL',
+      variables: ['user.name', 'app.url'],
+      eventKey: 'USER_SIGNUP',
+      eventDescription: 'Sent when a new user registers'
+    },
+    {
+      name: 'Booking Confirmation',
+      subject: 'Booking Confirmed! ✅ - {{booking.id}}',
+      body: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #db2777;">Booking Confirmed!</h1>
+          <p>Hi {{user.name}},</p>
+          <p>Your booking for <strong>{{theme.name}}</strong> on <strong>{{booking.date}}</strong> is confirmed.</p>
+          <p><strong>Location:</strong> {{booking.location}}</p>
+          <p><strong>Total Amount:</strong> ₹{{booking.amount}}</p>
+          <br/>
+          <a href="{{app.url}}/dashboard/bookings/{{booking.id}}" style="background-color: #db2777; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking</a>
+        </div>
+      `,
+      type: 'TRANSACTIONAL',
+      variables: ['user.name', 'theme.name', 'booking.date', 'booking.location', 'booking.amount', 'booking.id', 'app.url'],
+      eventKey: 'BOOKING_CONFIRMED',
+      eventDescription: 'Sent when a booking is confirmed'
+    }
+  ];
+
+  for (const template of emailTemplates) {
+    // Upsert Template
+    const createdTemplate = await prisma.emailTemplate.upsert({
+      where: { id: `tpl_${template.eventKey.toLowerCase()}` }, // Use deterministic ID for upsert
+      update: {
+        name: template.name,
+        subject: template.subject,
+        body: template.body,
+        variables: template.variables
+      },
+      create: {
+        id: `tpl_${template.eventKey.toLowerCase()}`,
+        name: template.name,
+        subject: template.subject,
+        body: template.body,
+        type: template.type,
+        variables: template.variables
+      }
+    });
+
+    // Upsert Event linked to Template
+    await prisma.emailEvent.upsert({
+      where: { eventKey: template.eventKey },
+      update: {
+        templateId: createdTemplate.id,
+        isActive: true
+      },
+      create: {
+        eventKey: template.eventKey,
+        description: template.eventDescription,
+        recipientType: 'USER',
+        templateId: createdTemplate.id,
+        isActive: true
+      }
+    });
+  }
+
+  console.log('✅ Email templates and events created');
+
   console.log('🎉 Database seed completed successfully!');
 }
 

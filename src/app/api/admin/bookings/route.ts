@@ -6,15 +6,29 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     // Check if user is admin (middleware should handle this)
+    // Check for admin or decorator role
     const userRole = request.headers.get('x-user-role');
-    if (userRole !== 'ADMIN') {
+    const userId = request.headers.get('x-user-id');
+
+    if (userRole !== 'ADMIN' && userRole !== 'DECORATOR') {
       return NextResponse.json(
-        { success: false, error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+        { success: false, error: { code: 'FORBIDDEN', message: 'Access denied' } },
         { status: 403 }
       );
     }
 
     const { searchParams } = new URL(request.url);
+
+    // If decorator, force filtering by their ID to ensure strict isolation
+    if (userRole === 'DECORATOR') {
+      const requestedDecoratorId = searchParams.get('decoratorId');
+      if (requestedDecoratorId !== userId) {
+        return NextResponse.json(
+          { success: false, error: { code: 'FORBIDDEN', message: 'Access restricted to assigned tasks only.' } },
+          { status: 403 }
+        );
+      }
+    }
     const status = searchParams.get('status');
     const paymentStatus = searchParams.get('paymentStatus');
     const dateFrom = searchParams.get('dateFrom');
@@ -26,6 +40,10 @@ export async function GET(request: NextRequest) {
 
     if (status) {
       where.status = status;
+    }
+
+    if (searchParams.get('decoratorId')) {
+      where.decoratorId = searchParams.get('decoratorId');
     }
 
     if (paymentStatus) {
@@ -80,6 +98,19 @@ export async function GET(request: NextRequest) {
         createdAt: 'desc',
       },
     });
+
+    // Sanitize data for Decorators
+    if (userRole === 'DECORATOR') {
+      const sanitizedBookings = bookings.map(b => {
+        const { totalAmount, paymentStatus, paymentIntentId, paidAmount, payments, ...safeBooking } = b as any;
+        return safeBooking;
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: sanitizedBookings,
+      });
+    }
 
     return NextResponse.json({
       success: true,

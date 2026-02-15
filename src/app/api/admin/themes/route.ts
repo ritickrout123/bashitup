@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, category, images, videoUrl, basePrice, setupTime } = body;
+    const { name, description, category, images, videoUrl, basePrice, setupTime, addonIds } = body;
 
     // Validate required fields
     if (!name || !description || !category || !basePrice || !setupTime) {
@@ -93,6 +93,11 @@ export async function POST(request: NextRequest) {
         basePrice: parseFloat(basePrice),
         setupTime: parseInt(setupTime),
         isActive: true,
+        themeAddons: {
+          create: Array.isArray(addonIds) ? addonIds.map((addonId: string) => ({
+            addon: { connect: { id: addonId } }
+          })) : [],
+        },
       },
       include: {
         _count: {
@@ -101,6 +106,11 @@ export async function POST(request: NextRequest) {
             portfolioItems: true,
           },
         },
+        themeAddons: {
+          include: {
+            addon: true
+          }
+        }
       },
     });
 

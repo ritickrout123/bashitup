@@ -5,9 +5,9 @@ import { verifyAccessToken, hasRole } from '@/lib/auth-edge';
 const protectedRoutes = {
   '/admin': ['ADMIN'],
   '/dashboard': ['CUSTOMER', 'ADMIN', 'DECORATOR'],
-  '/booking': ['CUSTOMER', 'ADMIN', 'DECORATOR'],
+  '/booking': ['CUSTOMER', 'ADMIN'], // REMOVED DECORATOR
   '/decorator': ['DECORATOR', 'ADMIN'],
-  '/api/admin': ['ADMIN'],
+  '/api/admin': ['ADMIN', 'DECORATOR'], // ALLOWED DECORATOR (Limited by API logic)
   '/api/decorator': ['DECORATOR', 'ADMIN'],
   '/api/bookings': ['CUSTOMER', 'ADMIN', 'DECORATOR'],
   '/api/auth/me': ['CUSTOMER', 'ADMIN', 'DECORATOR'],
@@ -110,6 +110,11 @@ export async function middleware(request: NextRequest) {
         },
         { status: 403 }
       );
+    }
+
+    // Role-specific redirects
+    if (payload.role === 'DECORATOR' && pathname.startsWith('/dashboard')) {
+      return NextResponse.redirect(new URL('/decorator', request.url));
     }
 
     // Add user info to request headers for API routes

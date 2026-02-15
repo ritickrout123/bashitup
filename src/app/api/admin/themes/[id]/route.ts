@@ -92,7 +92,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, description, category, images, videoUrl, basePrice, setupTime, isActive } = body;
+    const { name, description, category, images, videoUrl, basePrice, setupTime, isActive, addonIds } = body;
 
     const updateData: any = {};
 
@@ -105,6 +105,16 @@ export async function PATCH(
     if (setupTime !== undefined) updateData.setupTime = parseInt(setupTime);
     if (isActive !== undefined) updateData.isActive = isActive;
 
+    // Handle Addon Updates if provided
+    if (addonIds !== undefined && Array.isArray(addonIds)) {
+      updateData.themeAddons = {
+        deleteMany: {}, // Remove all existing links
+        create: addonIds.map((addonId: string) => ({
+          addon: { connect: { id: addonId } }
+        }))
+      };
+    }
+
     const theme = await prisma.theme.update({
       where: { id: params.id },
       data: updateData,
@@ -115,6 +125,11 @@ export async function PATCH(
             portfolioItems: true,
           },
         },
+        themeAddons: {
+          include: {
+            addon: true
+          }
+        }
       },
     });
 

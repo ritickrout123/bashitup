@@ -86,9 +86,12 @@ export interface Booking {
   }[];
   createdAt: Date;
   updatedAt: Date;
+  proofOfWorkUrl?: string; // URL to the uploaded proof image
+  completedAt?: Date; // Timestamp when booking was marked completed
   // Relations
   theme?: Theme;
   customer?: User;
+  decorator?: User;
   addons?: any[];
   payments?: any[];
 }

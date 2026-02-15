@@ -115,12 +115,19 @@ export default function Header({ transparent = false, showBookingCTA = true, var
             >
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <Link href="/dashboard" className="text-white/90 hover:text-yellow-300 transition-colors font-medium backdrop-blur-sm px-3 py-2 rounded-lg hover:bg-white/10">
-                    Dashboard
-                  </Link>
+                  {user.role === 'CUSTOMER' && (
+                    <Link href="/dashboard" className="text-white/90 hover:text-yellow-300 transition-colors font-medium backdrop-blur-sm px-3 py-2 rounded-lg hover:bg-white/10">
+                      Dashboard
+                    </Link>
+                  )}
                   {user.role === 'ADMIN' && (
                     <Link href="/admin" className="text-white/90 hover:text-yellow-300 transition-colors font-medium backdrop-blur-sm px-3 py-2 rounded-lg hover:bg-white/10">
-                      Admin
+                      Admin Panel
+                    </Link>
+                  )}
+                  {user.role === 'DECORATOR' && (
+                    <Link href="/decorator" className="text-white/90 hover:text-yellow-300 transition-colors font-medium backdrop-blur-sm px-3 py-2 rounded-lg hover:bg-white/10">
+                      My Tasks
                     </Link>
                   )}
                   <button
@@ -141,7 +148,7 @@ export default function Header({ transparent = false, showBookingCTA = true, var
                 </div>
               )}
 
-              {showBookingCTA && (
+              {showBookingCTA && (!user || user.role === 'CUSTOMER') && (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -349,12 +356,19 @@ export default function Header({ transparent = false, showBookingCTA = true, var
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                <Link href="/dashboard" className={`${textClasses} ${transparent ? 'hover:text-yellow-300' : 'hover:text-purple-600'} transition-colors font-medium`}>
-                  Dashboard
-                </Link>
+                {user.role === 'CUSTOMER' && (
+                  <Link href="/dashboard" className={`${textClasses} ${transparent ? 'hover:text-yellow-300' : 'hover:text-purple-600'} transition-colors font-medium`}>
+                    Dashboard
+                  </Link>
+                )}
                 {user.role === 'ADMIN' && (
                   <Link href="/admin" className={`${textClasses} ${transparent ? 'hover:text-yellow-300' : 'hover:text-purple-600'} transition-colors font-medium`}>
-                    Admin
+                    Admin Panel
+                  </Link>
+                )}
+                {user.role === 'DECORATOR' && (
+                  <Link href="/decorator" className={`${textClasses} ${transparent ? 'hover:text-yellow-300' : 'hover:text-purple-600'} transition-colors font-medium`}>
+                    My Tasks
                   </Link>
                 )}
                 <button
@@ -375,7 +389,7 @@ export default function Header({ transparent = false, showBookingCTA = true, var
               </div>
             )}
 
-            {showBookingCTA && (
+            {showBookingCTA && (!user || user.role === 'CUSTOMER') && (
               <Link
                 href="/booking"
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
@@ -439,20 +453,31 @@ export default function Header({ transparent = false, showBookingCTA = true, var
               <div className="border-t border-gray-200 border-opacity-20 pt-4">
                 {user ? (
                   <>
-                    <Link
-                      href="/dashboard"
-                      className={`block px-3 py-2 rounded-md text-base font-medium ${textClasses} hover:bg-gray-100 hover:bg-opacity-20 transition-colors`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
+                    {user.role === 'CUSTOMER' && (
+                      <Link
+                        href="/dashboard"
+                        className={`block px-3 py-2 rounded-md text-base font-medium ${textClasses} hover:bg-gray-100 hover:bg-opacity-20 transition-colors`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
                     {user.role === 'ADMIN' && (
                       <Link
                         href="/admin"
                         className={`block px-3 py-2 rounded-md text-base font-medium ${textClasses} hover:bg-gray-100 hover:bg-opacity-20 transition-colors`}
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        Admin
+                        Admin Panel
+                      </Link>
+                    )}
+                    {user.role === 'DECORATOR' && (
+                      <Link
+                        href="/decorator"
+                        className={`block px-3 py-2 rounded-md text-base font-medium ${textClasses} hover:bg-gray-100 hover:bg-opacity-20 transition-colors`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        My Tasks
                       </Link>
                     )}
                     <button
@@ -484,7 +509,7 @@ export default function Header({ transparent = false, showBookingCTA = true, var
                   </>
                 )}
 
-                {showBookingCTA && (
+                {showBookingCTA && (!user || user.role === 'CUSTOMER') && (
                   <Link
                     href="/booking"
                     className="block mx-3 mt-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full font-semibold text-center hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg"

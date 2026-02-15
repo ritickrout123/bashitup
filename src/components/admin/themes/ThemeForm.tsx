@@ -9,12 +9,20 @@ export interface ThemeFormData {
     basePrice: number;
     setupTime: number;
     isActive: boolean;
+    addonIds?: string[];
 }
 
 interface ThemeFormProps {
     initialData?: any;
     onSubmit: (data: ThemeFormData) => Promise<void>;
     onCancel: () => void;
+}
+
+interface Addon {
+    id: string;
+    name: string;
+    price: number;
+    category: string;
 }
 
 export default function ThemeForm({ initialData, onSubmit, onCancel }: ThemeFormProps) {
@@ -27,9 +35,15 @@ export default function ThemeForm({ initialData, onSubmit, onCancel }: ThemeForm
         basePrice: 0,
         setupTime: 0,
         isActive: true,
+        addonIds: [],
     });
     const [imageUrls, setImageUrls] = useState('');
     const [loading, setLoading] = useState(false);
+    const [availableAddons, setAvailableAddons] = useState<Addon[]>([]);
+
+    useEffect(() => {
+        fetchAddons();
+    }, []);
 
     useEffect(() => {
         if (initialData) {
@@ -43,6 +57,9 @@ export default function ThemeForm({ initialData, onSubmit, onCancel }: ThemeForm
                 images = [];
             }
 
+            // Extract existing addon IDs if available (assuming initialData includes themeAddons)
+            const existingAddonIds = initialData.themeAddons?.map((ta: any) => ta.addonId) || [];
+
             setFormData({
                 name: initialData.name,
                 description: initialData.description,
@@ -52,10 +69,34 @@ export default function ThemeForm({ initialData, onSubmit, onCancel }: ThemeForm
                 basePrice: initialData.basePrice,
                 setupTime: initialData.setupTime,
                 isActive: initialData.isActive,
+                addonIds: existingAddonIds,
             });
             setImageUrls(images.join(', '));
         }
     }, [initialData]);
+
+    const fetchAddons = async () => {
+        try {
+            const res = await fetch('/api/admin/addons');
+            const data = await res.json();
+            if (data.success) {
+                setAvailableAddons(data.data);
+            }
+        } catch (e) {
+            console.error('Failed to fetch addons:', e);
+        }
+    };
+
+    const handleAddonToggle = (addonId: string) => {
+        setFormData(prev => {
+            const currentIds = prev.addonIds || [];
+            if (currentIds.includes(addonId)) {
+                return { ...prev, addonIds: currentIds.filter(id => id !== addonId) };
+            } else {
+                return { ...prev, addonIds: [...currentIds, addonId] };
+            }
+        });
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -164,6 +205,33 @@ export default function ThemeForm({ initialData, onSubmit, onCancel }: ThemeForm
                             onChange={(e) => setFormData({ ...formData, setupTime: parseInt(e.target.value) })}
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         />
+                    </div>
+
+                    <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Optional Add-ons</label>
+                        <div className="bg-gray-50 p-4 rounded-md border border-gray-200 max-h-60 overflow-y-auto">
+                            {availableAddons.length === 0 ? (
+                                <p className="text-gray-500 text-sm">No add-ons available. Create some first.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {availableAddons.map(addon => (
+                                        <div key={addon.id} className="flex items-start">
+                                            <input
+                                                type="checkbox"
+                                                id={`addon-${addon.id}`}
+                                                checked={formData.addonIds?.includes(addon.id)}
+                                                onChange={() => handleAddonToggle(addon.id)}
+                                                className="h-4 w-4 mt-1 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            />
+                                            <label htmlFor={`addon-${addon.id}`} className="ml-2 text-sm text-gray-700">
+                                                <span className="font-medium">{addon.name}</span>
+                                                <span className="block text-gray-500 text-xs">{addon.category} • ₹{addon.price}</span>
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="col-span-2">

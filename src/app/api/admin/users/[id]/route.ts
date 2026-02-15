@@ -42,6 +42,23 @@ export async function GET(
             createdAt: 'desc',
           },
         },
+        decorations: {
+          select: {
+            id: true,
+            occasionType: true,
+            date: true,
+            status: true,
+            totalAmount: true, // Admin can see amount
+            theme: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
         testimonials: {
           select: {
             id: true,

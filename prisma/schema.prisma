@@ -102,6 +102,8 @@ model Booking {
   updatedAt         DateTime       @updatedAt
   location          Json
   statusHistory     Json?          // Stores array of { status, timestamp, note }
+  proofOfWorkUrl    String?
+  completedAt       DateTime?
   addons            BookingAddon[]
   customer          User           @relation(fields: [customerId], references: [id])
   decorator         User?          @relation("DecoratorBookings", fields: [decoratorId], references: [id])
