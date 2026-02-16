@@ -1,19 +1,24 @@
 
-import * as SibApiV3Sdk from 'sib-api-v3-sdk';
+import * as brevo from '@getbrevo/brevo';
 
-const defaultClient = SibApiV3Sdk.ApiClient.instance;
+const apiInstance = new brevo.TransactionalEmailsApi();
+const emailCampaignsApiInstance = new brevo.EmailCampaignsApi();
 
 // Configure API key authorization
-const apiKey = defaultClient.authentications['api-key'];
+// @ts-ignore - The new Brevo SDK has 'authentications' as protected, but the docs say to access it this way (or cast to any)
+const apiKey = (apiInstance as any).authentications['apiKey'];
 apiKey.apiKey = process.env.BREVO_API_KEY || '';
 
+const emailCampaignsApiKey = (emailCampaignsApiInstance as any).authentications['apiKey'];
+emailCampaignsApiKey.apiKey = process.env.BREVO_API_KEY || '';
+
 export class BrevoService {
-    private apiInstance: SibApiV3Sdk.EmailCampaignsApi;
-    private transactionalApiInstance: SibApiV3Sdk.TransactionalEmailsApi;
+    private apiInstance: brevo.EmailCampaignsApi;
+    private transactionalApiInstance: brevo.TransactionalEmailsApi;
 
     constructor() {
-        this.apiInstance = new SibApiV3Sdk.EmailCampaignsApi();
-        this.transactionalApiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+        this.apiInstance = emailCampaignsApiInstance;
+        this.transactionalApiInstance = apiInstance;
     }
 
     async createCampaign(
@@ -24,11 +29,12 @@ export class BrevoService {
         listIds: number[],
         scheduledAt?: string
     ) {
-        const emailCampaigns = new SibApiV3Sdk.CreateEmailCampaign();
+        const emailCampaigns = new brevo.CreateEmailCampaign();
 
         emailCampaigns.name = name;
         emailCampaigns.subject = subject;
         emailCampaigns.sender = sender;
+        // @ts-ignore - The type definition in the SDK might be strict about this string, but 'classic' is correct for standard campaigns
         emailCampaigns.type = 'classic';
         emailCampaigns.htmlContent = htmlContent;
         emailCampaigns.recipients = { listIds };
@@ -53,7 +59,7 @@ export class BrevoService {
         htmlContent: string,
         sender: { email: string; name: string } = { email: 'noreply@bashitnow.com', name: 'BashItNow' }
     ) {
-        const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+        const sendSmtpEmail = new brevo.SendSmtpEmail();
 
         sendSmtpEmail.subject = subject;
         sendSmtpEmail.htmlContent = htmlContent;
